@@ -13,7 +13,7 @@ gamma=0; kappa=0;
 e1=0; e2=0;
 dt=0;
 tf=0;
-nwmax = 0;
+nwmax = 0; ntmax = 0;
 nstates=0;
 
 lamb0=0;

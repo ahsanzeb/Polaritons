@@ -7,13 +7,13 @@ from scipy.integrate import ode
 from numpy import pi, exp
 from scipy.sparse import coo_matrix, diags
 import matplotlib.pyplot as plt
-
+from multiprocessing import Pool
 
 # define local to avoid writing o. every time!
 # at risk of setting these at the time of first import of this module only.
 ##### any update in the values of these variables will not be considered by the functions of this module, because they use the first-import-time's set values.
 ########### consider this if loops over lambda/wr/n for absorption calculations is tried.
-n,m,mx = o.n, o.m, o.mx
+n,m,mx,Np = o.n, o.m, o.mx,o.Np
 wr,wx,wc,wv = o.wr, o.wx, o.wc, o.wv
 dumy = o.dumy;
 n1,n2,n3,ntot = o.n1,o.n2,o.n3,o.ntot;
@@ -21,11 +21,16 @@ lamb0 = o.lamb0;
 
 gamma, kappa =	 o.gamma, o.kappa
 e1,e2,dt,tf = 	o.e1, o.e2, o.dt, o.tf
-nwmax =	o.nwmax
+nwmax,ntmax =	o.nwmax, o.ntmax
 mg = o.mg
 show = 	o.show
 
 kl= kappa/2;
+
+lmin,lmax, nlmax = o.lmin, o.lmax,  o.nlmax;
+loopover= o.loopover;
+lambda0= o.lambda0;
+
 
 # to supress printing of small floats, print them 0
 np.set_printoptions(suppress=True)
@@ -48,18 +53,28 @@ def getwlist(ntmax,dt):
 	f *= 1/(dt*ntmax);
 	return f;
 #--------------------------
-def fInteg(t, y):
-	# gives RHS of td-schrodinger equation with losses:
-	# uses global: ham1, kappa, gamma
-	# takes: psi(t);
-	# gives [-iota*H - (kappa*PhotProjector + gamma*ExcProjector)]psi(t)
-	hdecay = np.concatenate( (kappa*y[range(n1)],gamma*y[range(n1,ntot)]) );
-	Hpsi = -1j*o.ham1.dot(y) - hdecay;
-	return Hpsi
-#--------------------------
-def gettd():
+def gettd(il):
 	# time evolves the state with only a photon present
 	# psi0 = |P(t=0)> = a^dag|0x,0p,0v> = [1,0,0,......,0];
+	#--------------------------
+	# making internal function
+	# to avoid making list of H for loopover lam/wr
+	#--------------------------
+	def fInteg(t, y):
+		# gives RHS of td-schrodinger equation with losses:
+		# gives [-iota*H - (kappa*PhotProjector + gamma*ExcProjector)]psi(t)
+		hdecay = np.concatenate( (kappa*y[range(n1)],gamma*y[range(n1,ntot)]) );
+		Hpsi = -1j*ham.dot(y) - hdecay;
+		return Hpsi
+	# -----------------------
+	# make full hamiltonian:
+	if loopover == "lambda0":
+		lamb0 = o.lambin0[il];
+		ham = o.ham1 + wv*o.Hbsm + wv*lamb0**2*o.sft;
+	else:
+		g = o.lambin0[il]/np.srqt(o.n);
+		ham = o.ham1 + g*o.Hgsm;
+	# -----------------------
 	row=[0];col=[0];dat=[1];
 	psi0=coo_matrix((dat, (row, col)), shape=(1,ntot));
 	# psi0 = psi0.tocsr();
@@ -68,17 +83,24 @@ def gettd():
 	# start complex integrator:
 	r = ode(fInteg).set_integrator('zvode', method='bdf')
 	r.set_initial_value(psi0, t0);
-	tlist = [0]; corr = [1];# correlation fun at t0
-	while r.successful() and r.t < tf:
-		tc = r.t+dt; 
+	# tlist = [0]; 
+	corr = [1];# correlation fun at t0
+	i = 1; # start from 1, t=0 already done!
+	while r.successful() and i < ntmax: #r.t < tf:
+		tc = i*dt; #r.t+dt; 
 		psit = r.integrate(tc);
 		# get the correlation function:
 		corr.append(np.vdot(psi0,psit));
-		tlist.append(tc);
+		# tlist.append(tc);
 		# iterate the integrator; from current time 
 		r.set_initial_value(psit, tc);
-	corr = np.array(corr); tlist = np.array(tlist);
-	return corr, tlist
+		i += 1;
+	if not r.successful():
+		print("getd: r.successful() = F !! stop?!");
+	corr = np.array(corr); # tlist = np.array(tlist);
+	
+#--------------------------
+	return corr # , tlist
 #----------------------------------------------------------
 # our spectrum has only nonzero peaks in a small reagion
 # FFT/IFFT not good because they spread the points on freq axis evenly and only a few ~ 50 points among ~10k lie within relevent region where we get absorption peaks, i.e., ~ 2.0 around wx.
@@ -137,7 +159,7 @@ def getFrewWindowCoor(wlist,e1,e2):
 	i2 = ic + i2;
 	return i1,i2
 #---------------------------------
-def fwriteCorr(tlist, corr, fnametd):
+def fwriteCorr(il,tlist, corr, fnametd):
 	# save correlation vs time
 	ntmax = len(tlist);
 	corrOUT = np.zeros((ntmax,3));
@@ -145,6 +167,12 @@ def fwriteCorr(tlist, corr, fnametd):
 	corrOUT[:,1] = np.real(corr);
 	corrOUT[:,2] = np.imag(corr);
 	f=open(fnametd,'ab');
+	if loopover =="lambda0":
+		lamb0 = o.lambin0[il];
+		wr0 = wr;
+	else:
+		wr0 = o.lambin0[il];
+		lamb0 = lambda0;
 	header =" "+str(n)+" "+str(m)+" "+str(mx)+" "+str(nwmax)+" "+str(ntmax);
 	header += " "+str(wr)+" "+str(lamb0)+" "+str(wc)+" "+str(wx)+" "+str(wv);
 	header += " "+str(gamma)+ " "+str(kappa)+ " "+str(tf)+ " "+str(dt);
@@ -156,7 +184,7 @@ def fwriteCorr(tlist, corr, fnametd):
 	f.close()		
 	return None
 #--------------------------
-def fwriteFT(wlist, Gw, GR, fnametd, ntmax):
+def fwriteFT(il,wlist, Gw, GR, fnametd, ntmax):
 	# save FT of correlation
 	absOUT = np.zeros((nwmax,4));
 	absOUT[:,0] = wlist;
@@ -165,8 +193,14 @@ def fwriteFT(wlist, Gw, GR, fnametd, ntmax):
 	absOUT[:,2] = 2*kl*np.real(Gw)**2 + kappa*np.abs(Gw)**2;
 	absOUT[:,3] = -np.imag(GR); # Green from analytical
 	f=open(fnametd,'ab');
+	if loopover =="lambda0":
+		lamb0 = o.lambin0[il];
+		wr0 = wr;
+	else:
+		wr0 = o.lambin0[il];
+		lamb0 = lambda0;
 	header =" "+str(n)+" "+str(m)+" "+str(mx)+" "+str(nwmax)+" "+str(ntmax);
-	header += " "+str(wr)+" "+str(lamb0)+" "+str(wc)+" "+str(wx)+" "+str(wv);
+	header += " "+str(wr0)+" "+str(lamb0)+" "+str(wc)+" "+str(wx)+" "+str(wv);
 	header += " "+str(gamma)+ " "+str(kappa)+ " "+str(tf)+ " "+str(dt);
 	np.savetxt(f, absOUT,fmt='%15.10f%15.10f%15.10f%15.10f', delimiter=' ', header=header,comments='#')
 	f.close();
@@ -203,6 +237,15 @@ def Green(wlist,l0):
 	return GRlist
 # -------------------------------------------
 
+def fcorrft(il):
+	corr = gettd(il); # calculate correlation
+	E1, E2 = e1+wx, e2+wx;		
+	wlist = np.linspace(E1, E2,nwmax);
+	Gw = getFourierTransform(corr,0,dt,wlist,'F');
+	# green function based results:
+	# wlist = wlist - wx ; # shift freq axis
+	GR = Green(wlist-wx,lamb0); 	# analytical Green function
+	return Gw, GR, corr
 
 
 
@@ -222,58 +265,53 @@ def Green(wlist,l0):
 # get photon correlation function, Fourier transform it. 
 # -----------------------------------------------------
 #if (absorption=='true' and td == 'true'):
+
 def corrft():
 	print(' ====> calculating absorption: time evolution ... ');
 	# indices for projectors: can we work with sparse?
 	# o.indPp = np.arange(0,n1); o.indPx = np.arange(n1,ntot);
-	
-	# Hamiltonian:
-	g= np.sqrt(n); g= wr/g;
 
-	ham = wc*o.Hcsm + wx*o.Hxsm + g*o.Hgsm + wv*o.Hvsm;
-	ham += lamb0*wv*o.Hbsm + wv*lamb0**2*o.sft;
-	
-	o.ham1 = ham.tocsr(); 	# csr for fast matrix vector products.
-	del o.Hcsm; del o.Hxsm; del o.Hgsm; del o.Hvsm;
-	del o.Hbsm; del o.sft;
-
-	corr, tlist = gettd(); # calculate correlation
-	ntmax=len(tlist); # no. of time points
+	# ------------------------------
+	# loop parameter: lambbda_0 or wr
+	lambin0 = np.linspace(lmin,lmax, nlmax);
+	o.lambin0 = lambin0;
+	# ------------------------------
+	# set o.ham1
+	if loopover == 'lambda0':
+		g= wr/np.sqrt(n);
+		o.ham1 =wc*o.Hcsm + wx*o.Hxsm + g*o.Hgsm + wv*o.Hvsm
+		del o.Hcsm; del o.Hxsm; del o.Hgsm; del o.Hvsm
+		# wv*o.Hbsm + wv*lamb0**2*o.sft
+		# ham.tocsr();# csr for fast matrix vector products.
+	elif loopover == 'wr':
+		o.ham1 = wc*o.Hcsm +wx*o.Hxsm +wv*o.Hvsm +lambda0*wv*o.Hbsm + wv*lambda0**2*o.sft;
+		del o.Hcsm; del o.Hxsm; del o.Hbsm; del o.Hvsm;
+	# ------------------------------
+	# Number of processes
+	if nlmax<Np:
+		Npl = nlmax;
+	else:
+		Npl = Np
+	# print(nlmax,Np,Npl)
+	# ------------------------------
+	# fresh pool
+	pool=Pool(Npl);
+	results = pool.map(fcorrft, range(nlmax))
+	pool.close();
+	# ------------------------------
+	wlist = np.linspace(e1,e2,nwmax);
+	tlist = np.linspace(0, tf, ntmax);
 	print(" ntmax = ",ntmax);
-	if 1:
-		E1, E2 = e1+wx, e2+wx;		
-		wlist = np.linspace(E1, E2,nwmax);
-		if 0:
-			cctf = corr[-1];
-			corrDecay = []; tlistadd = [];
-			tff= ntmax*dt;
-			nsmooth = 100;
-			for i in range(1,nsmooth):
-				corrDecay.append(cctf*np.exp(-i));
-				tff += dt
-				tlistadd.append(tff);
-			corrDecay = np.array(corrDecay);
-			tlistadd = np.array(tlistadd);
-			corr = np.concatenate((corr,corrDecay));
-			tlist = np.concatenate((tlist,tlistadd));
-			ntmax = ntmax+nsmooth-1;
-		Gw = getFourierTransform(corr,0,dt,wlist,'F');
-		if 0:
-			# remove fast unphysical oscillations		
-			dw = wlist[1] - wlist[0];
-			Gwt = getFourierTransform(Gw,E1,dw,tlist,'B');
-			Gwtw = getFourierTransform(Gwt,0,dt,wlist,'F');
-	# Gw, wlist = getFT(); # get Fourier Transform of corr
-	# Gw, wlist = getMyFT(corr); # get Fourier Transform of corr
-	# green function based results:
-	wlist = wlist - wx ; # shift freq axis
-	GR = Green(wlist,lamb0); 	# analytical Green function
-	fwriteFT(wlist, Gw, GR, dumy+'/abs-vs-w-td.txt', len(tlist)); # write FT file
-	fwriteCorr(tlist, corr, dumy+'/corr-vs-t-td.txt');# write Correlation file
-
 	print(" nwft = ",nwmax);
+	# ------------------------------
+	il = 0;
+	for Gw, GR, corr in results:
+		fwriteFT(il, wlist, Gw, GR, dumy+'/abs-vs-w-td.txt', ntmax); # write FT file
+		fwriteCorr(il, tlist, corr, dumy+'/corr-vs-t-td.txt');# write Correlation file
+		il += 1;
+	# ------------------------------
+	if 0: #show:
 	
-	if show:
 		#print(GR.shape)
 		plt.plot(wlist, np.real(Gw),'-r',lw=1,label='$Re[G(w)]$')
 		#plt.plot(wlist, np.real(Gwtw),'-g',lw=1,label='Gwtw')

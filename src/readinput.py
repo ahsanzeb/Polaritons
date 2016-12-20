@@ -312,7 +312,6 @@ os.makedirs(path, exist_ok=True)
 
 
 
-
 #****************************************************************
 # set global variables:
 #****************************************************************
@@ -339,6 +338,11 @@ o.ld=ld
 o.nstates = nstates
 o.dumy=dumy
 
+if 1:
+	o.lmin, o.lmax,  o.nlmax = lmin,lmax, nlmax
+	o.loopover =loopover; 
+	o.lambda0=lambda0
+
 # for specific type of calculations
 if corrtd:
 	o.corrtd = corrtd;
@@ -349,6 +353,8 @@ if corrtd:
 
 if matelem or corrtd:
 	o.lamb0 = lamb0;
+	o.ntmax = int(tf/dt);
+
 
 if matelem or groundstate:
 	o.itermax,  o.tolr=itermax, tolr
@@ -356,9 +362,6 @@ if matelem or groundstate:
 
 if groundstate:
 	o.groundstate = groundstate;
-	o.lmin, o.lmax,  o.nlmax = lmin,lmax, nlmax
-	o.loopover =loopover; 
-	o.lambda0=lambda0
 	if justenergy:
 		o.justenergy = justenergy;
 #****************************************************************

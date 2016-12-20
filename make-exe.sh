@@ -13,8 +13,8 @@ chmod +x $exe
 rm x.zip
 
 ### if want to keep the executable to bin:
-# bin='/Users/panda/bin'
-# mv $exe $bin
+bin='/Users/panda/bin'
+mv $exe $bin
 ### if need to add the path of bin to PATH:
 # echo "PATH=$bin:"'$PATH': >> ~/.bashrc
 
