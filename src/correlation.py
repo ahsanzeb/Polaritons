@@ -72,7 +72,7 @@ def gettd(il):
 		lamb0 = o.lambin0[il];
 		ham = o.ham1 + wv*o.Hbsm + wv*lamb0**2*o.sft;
 	else:
-		g = o.lambin0[il]/np.srqt(o.n);
+		g = o.lambin0[il]/np.sqrt(o.n);
 		ham = o.ham1 + g*o.Hgsm;
 	# -----------------------
 	row=[0];col=[0];dat=[1];

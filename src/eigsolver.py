@@ -11,6 +11,7 @@ wr,wx,wc,wv = o.wr, o.wx, o.wc, o.wv
 eshft, nstates = o.eshft, o.nstates
 tolr, itermax = o.tolr, o.itermax 
 justenergy = o.justenergy
+lambda0= o.lambda0;
 
 
 # LOWER BOUND ON ENERGY: lambda
@@ -63,16 +64,17 @@ def fdiagl(lamb):
 # diagonalisation: for wr loop. sigma=?
 def fdiagw(lamb):
 	il=lamb[0]; wr = lamb[1];
-	g= np.sqrt(n); g= wr/g;
+	g= wr/np.sqrt(n);
 	# with sigma=E_LowerBound, A = ham-sigma*I
 	# becomes positive definite (ham symmetric --> A symmetric) 
 	enlb=elbw(wr) # lower bound on E_LP
 	ham = o.ham1 + g*o.Hgsm - enlb*o.iden
 	itermax = 100; tolr=1e-8; 
 	evalu, evec = lobpcg(A=ham, X=o.ev0, tol=tolr, maxiter=itermax,largest=False,verbosityLevel=0)
-	elp = evalu+enlb + eshft; 
-	print("il, wr, Elp = ",il,wr, elp)
-	sys.stdout.flush()	
+	elp = evalu+enlb + eshft;
+	if nstates <= 5:
+		print("il, wr, Elp = ",il,wr, elp)
+		sys.stdout.flush()	
 	if justenergy:
 		return il, elp
 	else:

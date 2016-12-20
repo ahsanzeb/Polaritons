@@ -350,10 +350,10 @@ if corrtd:
 	o.e1, o.e2, o.dt, o.tf = e1,e2,dt,tf
 	o.nwmax = nwmax ; o.mg  = mg;
 	o.show = show
+	o.ntmax = int(tf/dt);
 
 if matelem or corrtd:
 	o.lamb0 = lamb0;
-	o.ntmax = int(tf/dt);
 
 
 if matelem or groundstate:
