@@ -8,10 +8,8 @@ from importlib import reload
 import importlib
 # -------------------------------------------------------
 # set the input file name for readinput module:
-if len(sys.argv) > 1:
-	o.inpfile = sys.argv[1];
-else:
-	o.inpfile = 'param.py';
+if len(sys.argv) > 1: o.inpfile = sys.argv[1];
+else: o.inpfile = 'param.py';
 # -------------------------------------------------------
 # welcome message 
 print(" ")
@@ -51,10 +49,8 @@ for N in nlist:
 	# calculate Hamiltonian:
 	# set global variables: Hcsm, Hxsm, Hvsm, Hbsm, Hgsm, sft
 
-	if niter==0:
-		import hamiltonian; 
-	else:
-		reload(hamiltonian)
+	if niter==0: import hamiltonian; 
+	else: reload(hamiltonian)
 
 	print('hmmmm')
 # import here to use the right values for global variables
@@ -64,10 +60,8 @@ for N in nlist:
 	if corrtd:
 		# absorption: using time evolution:
 		# calculates and saves: corr,ft, analyt. G
-		if niter==0:
-			import correlation; 
-		else:
-			reload(correlation)
+		if niter==0: import correlation; 
+		else: reload(correlation)
 		correlation.corrft();
 		memtime('corrft');# print memory and time info
 	# -------------------------------------------------------	
@@ -76,31 +70,23 @@ for N in nlist:
 		if o.nstates < 0 or o.nstates > o.ntot:
 			o.nstates = o.ntot;
 			print(" input nstates < 0 or > ntot! so setting nstates = ntot")
-		if niter==0:
-			import matrixelements;
-		else:
-			reload(matrixelements)
+		if niter==0: import matrixelements;
+		else: reload(matrixelements)
 		matrixelements.fmatelem();
 		memtime('matelem');# print memory and time info
 	# -------------------------------------------------------
 	if groundstate:
 		# ground state calculations:
-		if niter==0:
-			import gssolver;
-		else:
-			reload(gssolver)
+		if niter==0: import gssolver;
+		else: reload(gssolver)
 		gssolver.gssolve();
 		memtime('gssolve');# print memory and time info
 		# write energy output file
-		if niter==0:
-			import energy;
-		else:
-			reload(energy)
+		if niter==0: import energy;
+		else: reload(energy)
 		if not justenergy:
-			if niter==0:
-				import densitymatrices
-			else:
-				reload(densitymatrices)
+			if niter==0: import densitymatrices
+			else: reload(densitymatrices)
 			densitymatrices.cdms();
 			memtime('cdms');# print memory and time info
 
