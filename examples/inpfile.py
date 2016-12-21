@@ -5,8 +5,8 @@
 absorption = 'true';
 td = 'true';
 # nstates = 400; # -ve means all states
-n=2;# n = no. of sites
-nlist = [2,3]; # range(2,21,3); # [2,3,4,5]
+n=5;# n = no. of sites
+nlist = [5]; # range(2,21,3); # [2,3,4,5]
 
 m=4; # cutoff on vib basis
 mx=5; #cuttoff for extra basis

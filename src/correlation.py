@@ -75,7 +75,8 @@ def gettd(il):
 	# make full hamiltonian:
 	if loopover == "lambda0":
 		lamb0 = o.lambin0[il];
-		ham = o.ham1 + wv*o.Hbsm + wv*lamb0**2*o.sft;
+		print('dasdsadsadsad lamb0= ',lamb0)
+		ham = o.ham1 + wv*lamb0*o.Hbsm + wv*lamb0**2*o.sft;
 	else:
 		g = o.lambin0[il]/np.sqrt(o.n);
 		ham = o.ham1 + g*o.Hgsm;
