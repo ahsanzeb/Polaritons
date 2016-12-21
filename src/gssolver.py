@@ -46,36 +46,36 @@ def gssolve():
 			print("      detuning != 0 ")
 			print("      ham1 =wc*Hcsm + wx*Hxsm + g*Hgsm + wv*Hvsm")
 			o.ham1 =wc*o.Hcsm + wx*o.Hxsm + g*o.Hgsm + wv*o.Hvsm
-			del o.Hcsm # free memory
-			del o.Hxsm
+			o.Hcsm = [];# free memory
+			o.Hxsm = [];
 		else:
 			print("      detuning = 0 ")
 			print("      ham1 = g*Hgsm + wv*Hvsm")
 			o.ham1 = g*o.Hgsm + wv*o.Hvsm
 
-		del o.Hgsm
-		del o.Hvsm
+		o.Hgsm = [];
+		o.Hvsm = [];
 		pool=Pool(Npdiag) # this would know ham1 and other variables
 		o.eigvv = pool.map(fdiagl, lambin);
 		#eigvv = pool.map(fdiagold, lambin)
 		# ssss=gc.collect()
 		# print('main: after loop: gc.collect() = ',ssss)
-		del o.ham1 # free memory
-		del o.Hbsm
+		o.ham1 = [];# free memory
+		o.Hbsm = [];
 	else: # if param.loopover == 'wr'
 		print('      calculating eigenvector/values... loop over wr ')
 		if (detuning == 1 ):
 			o.ham1 = wc*o.Hcsm + wx*o.Hxsm + wv*o.Hvsm + lambda0*wv*o.Hbsm + wv*lambda0**2*o.sft;
-			del o.Hcsm # free memory
-			del o.Hxsm
+			o.Hcsm = []; # free memory
+			o.Hxsm = [];
 		else:
 			o.ham1 = wv*o.Hvsm + lambda0*wv*o.Hbsm + wv*lambda0**2*o.sft;
-		del o.Hbsm
-		del o.Hvsm
+		o.Hbsm = [];
+		o.Hvsm = [];
 		pool=Pool(Npdiag) # this would know ham1 and other variables
 		o.eigvv = pool.map(fdiagw, lambin)
-		del o.ham1 # free memory
-		del o.Hgsm
+		o.ham1 = []; # free memory
+		o.Hgsm = [];
 	
 	pool.close() # this pool does not know eigvv
 	return

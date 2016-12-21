@@ -280,12 +280,12 @@ def corrft():
 	if loopover == 'lambda0':
 		g= wr/np.sqrt(n);
 		o.ham1 =wc*o.Hcsm + wx*o.Hxsm + g*o.Hgsm + wv*o.Hvsm
-		del o.Hcsm; del o.Hxsm; del o.Hgsm; del o.Hvsm
+		o.Hcsm=[]; o.Hxsm=[]; o.Hgsm=[]; o.Hvsm=[]
 		# wv*o.Hbsm + wv*lamb0**2*o.sft
 		# ham.tocsr();# csr for fast matrix vector products.
 	elif loopover == 'wr':
 		o.ham1 = wc*o.Hcsm +wx*o.Hxsm +wv*o.Hvsm +lambda0*wv*o.Hbsm + wv*lambda0**2*o.sft;
-		del o.Hcsm; del o.Hxsm; del o.Hbsm; del o.Hvsm;
+		o.Hcsm=[]; o.Hxsm=[]; o.Hbsm=[]; o.Hvsm=[];
 	# ------------------------------
 	# Number of processes
 	if nlmax<Np:

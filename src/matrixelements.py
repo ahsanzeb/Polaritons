@@ -137,22 +137,21 @@ def fmatelem():
 		g= wr/np.sqrt(n);
 		if (detuning==1):
 			o.ham1 =wc*o.Hcsm + wx*o.Hxsm + g*o.Hgsm + wv*o.Hvsm
-			del o.Hcsm # free memory
-			del o.Hxsm
+			o.Hcsm = []; # free memory
+			o.Hxsm = [];
 		else:
 			o.ham1 = g*o.Hgsm + wv*o.Hvsm
-		del o.Hgsm
-		del o.Hvsm
+		o.Hgsm =[]; o.Hvsm = [];
 	elif loopover =='wr':
 		fsolve = fdiagw;# for diagonalisation
 		if (detuning == 1 ):
 			o.ham1 = wc*o.Hcsm + wx*o.Hxsm + wv*o.Hvsm + lambda0*wv*o.Hbsm + wv*lambda0**2*o.sft;
-			del o.Hcsm # free memory
-			del o.Hxsm
+			o.Hcsm = []; # free memory
+			o.Hxsm = [];
 		else:
 			o.ham1 = wv*o.Hvsm + lambda0*wv*o.Hbsm + wv*lambda0**2*o.sft;
-		del o.Hbsm
-		del o.Hvsm
+		o.Hbsm = [];
+		o.Hvsm = [];
 
 
 	lambin0 = np.linspace(lmin,lmax, nlmax);
