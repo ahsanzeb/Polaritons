@@ -48,11 +48,8 @@ for N in nlist:
 	# -------------------------------------------------------
 	# calculate Hamiltonian:
 	# set global variables: Hcsm, Hxsm, Hvsm, Hbsm, Hgsm, sft
-
 	if niter==0: import hamiltonian; 
 	else: reload(hamiltonian)
-
-	print('hmmmm')
 # import here to use the right values for global variables
 	hamiltonian.hamilt();
 	memtime('hamiltonian');# print memory and time info
@@ -91,7 +88,6 @@ for N in nlist:
 			memtime('cdms');# print memory and time info
 
 	niter +=1;
-
 memtime('everything');# print memory and time info
 print(" ===> Everything completed...")
 print(' ')
