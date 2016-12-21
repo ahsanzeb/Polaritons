@@ -55,11 +55,11 @@ def gssolve():
 
 		o.Hgsm = [];
 		o.Hvsm = [];
-		pool=Pool(Npdiag) # this would know ham1 and other variables
-		o.eigvv = pool.map(fdiagl, lambin);
-		#eigvv = pool.map(fdiagold, lambin)
-		# ssss=gc.collect()
-		# print('main: after loop: gc.collect() = ',ssss)
+		if nlmax ==1: o.eigvv = [fdiagl(lambin[0])];
+		else:
+			pool=Pool(Npdiag) # this would know ham1 and other variables
+			o.eigvv = pool.map(fdiagl, lambin);
+			pool.close()
 		o.ham1 = [];# free memory
 		o.Hbsm = [];
 	else: # if param.loopover == 'wr'
@@ -72,12 +72,14 @@ def gssolve():
 			o.ham1 = wv*o.Hvsm + lambda0*wv*o.Hbsm + wv*lambda0**2*o.sft;
 		o.Hbsm = [];
 		o.Hvsm = [];
-		pool=Pool(Npdiag) # this would know ham1 and other variables
-		o.eigvv = pool.map(fdiagw, lambin)
+		if nlmax ==1: o.eigvv = [fdiagw(lambin[0])];
+		else:
+			pool=Pool(Npdiag) # this would know ham1 and other variables
+			o.eigvv = pool.map(fdiagw, lambin);
+			pool.close()
 		o.ham1 = []; # free memory
 		o.Hgsm = [];
 	
-	pool.close() # this pool does not know eigvv
 	return
 
 

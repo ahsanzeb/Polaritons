@@ -20,6 +20,9 @@ n1,n2,n3,ntot = o.n1,o.n2,o.n3,o.ntot;
 lamb0 = o.lamb0;
 
 gamma, kappa =	 o.gamma, o.kappa
+if abs(gamma-kappa) > 1e-5: dkapa = 1;
+else: dkapa = 0;
+
 e1,e2,dt,tf = 	o.e1, o.e2, o.dt, o.tf
 nwmax,ntmax =	o.nwmax, o.ntmax
 mg = o.mg
@@ -63,7 +66,9 @@ def gettd(il):
 	def fInteg(t, y):
 		# gives RHS of td-schrodinger equation with losses:
 		# gives [-iota*H - (kappa*PhotProjector + gamma*ExcProjector)]psi(t)
-		hdecay = np.concatenate( (kappa*y[range(n1)],gamma*y[range(n1,ntot)]) );
+		if dkapa: hdecay = np.concatenate( (kappa*y[range(n1)],gamma*y[range(n1,ntot)]) );
+		else: hdecay = kappa*y
+		
 		Hpsi = -1j*ham.dot(y) - hdecay;
 		return Hpsi
 	# -----------------------
@@ -294,10 +299,12 @@ def corrft():
 		Npl = Np
 	# print(nlmax,Np,Npl)
 	# ------------------------------
-	# fresh pool
-	pool=Pool(Npl);
-	results = pool.map(fcorrft, range(nlmax))
-	pool.close();
+	if nlmax == 1: results = [fcorrft(0)];
+	else:
+		# fresh pool
+		pool=Pool(Npl);
+		results = pool.map(fcorrft, range(nlmax))
+		pool.close();
 	# ------------------------------
 	wlist = np.linspace(e1,e2,nwmax);
 	tlist = np.linspace(0, tf, ntmax);

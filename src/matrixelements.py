@@ -180,9 +180,15 @@ def fmatelem():
 		else:
 			#print("wx = ",eshft)
 			evalues = evalues - eshft; # shift all E_m by E_x:	
-		pool=Pool(Np); # refresh pool
-		# photon fraction:
-		cos2th = pool.map(getCos2th, range(nstates))
+		if nlmax ==1: 
+			cos2th = [];
+			for i in range(nstates):
+				cos2th.append(getCos2th(i));
+		else:
+			pool=Pool(Np); # refresh pool
+			# photon fraction:
+			cos2th = pool.map(getCos2th, range(nstates));
+			pool.close(); # close this pool
 		# coeff of eigenstates in photon and exciton sectors with 0 phonon: basis indeces = 0,n1
 		# Aphot = o.evecs[0,:]; # all eigenstates, columns
 		# Aexc = o.evecs[n1,:];
@@ -214,7 +220,6 @@ def fmatelem():
 		print('    ',file=f)
 		print('    ',file=f)
 		f.close()		
-		pool.close(); # close this pool
 
 	print(" absorption data calculated for postprocessing!");
 	return
