@@ -19,6 +19,7 @@ nstates=0;
 lamb0=0;
 wr=0;wx=0;wc=0;wv=0;
 n=0;m=0;mx=0;
+
 Np=0;
 mg=0;
 lmin=0;lmax=0; nlmax=0;
@@ -75,5 +76,7 @@ ham1 = [];
 lambin = []; lambin0 = []; 
 ev0 = [];
 #----------------------------------
+
+nlist = [];
 
 

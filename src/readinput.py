@@ -37,6 +37,14 @@ nstates=1;
 absorption='false';
 td = 'false';
 wr = 0; lambda0 = 0
+lmin = 0;
+lmax = 0;
+nlmax = 1;
+# loopover = 'lambda0';
+
+
+
+
 
 if hasattr(param, 'absorption'):
 	absorption = param.absorption
@@ -215,11 +223,6 @@ if(absorption=='true'):
 	# else:
 	# 	mg = mx;
 	mg = 10;
-	# set lmin etc to be consistent with eigensolver functions.
-	lmin = lamb0;
-	lmax = 2*lamb0;
-	nlmax = 1;
-	loopover = 'lambda0';
 
 
 if hasattr(param, 'loopover'):
@@ -237,7 +240,7 @@ if hasattr(param, 'loopover'):
 		lmax=param.wmax;
 		nlmax=param.nwmax;
 		print('   calculations would be for loop over wr ... ')
-	else:
+	else: # if absorption !='true':
 		print('   error: set option loopover to lambda0 or wr (with relevant min,max,nmax data)')
 		exit()
 
@@ -262,7 +265,7 @@ if td != 'true':
 		tolr = 1e-8;
 		print(" tolr not set: default = 1e-8 will be used...");
 #-------------------------------------
-print(" n, m, mx = ",n,m,mx);
+print(" m, mx = ", m,mx);
 if mx < m:
 	mx=m; print("was mx < m =====> setting mx=m")
 #-------------------------------------
@@ -296,6 +299,15 @@ if (ld > 0.5 or ld < 0):
 
 
 
+if hasattr(param, 'nlist'):
+	nlist = param.nlist;
+else:
+	nlist = [n];
+for x in nlist:
+	if x <2:
+		print(' n < 2 not working .... ')
+		exit();
+
 
 
 
@@ -327,11 +339,11 @@ else:
 	if onlyenergy == 'true':
 		justenergy = 1;
 	else:
-		print('vibrational dm: setting mx=m, mx > m not implemented... ');
+		print(' vib dm: setting mx=m, mx > m not implemented... ');
 		mx = m;
 
-
 # for all types of calculations
+o.nlist = nlist;
 o.n, o.m, o.mx, o.Np =n,m,mx,Np;
 o.wr, o.wx, o.wc, o.wv=wr,wx,wc,wv
 o.ld=ld
