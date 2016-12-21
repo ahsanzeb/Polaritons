@@ -3,9 +3,12 @@
 import globalvariables as o
 import basis
 from memtime import memtime
+from auxfunc import prntmsg,createoutdir
+
 import time, sys
 from importlib import reload
 import importlib
+
 # -------------------------------------------------------
 # set the input file name for readinput module:
 if len(sys.argv) > 1: o.inpfile = sys.argv[1];
@@ -16,34 +19,33 @@ print(" ")
 print(" *** *** *** Welcome to Polaritons *** *** *** ")
 print(" Current date & time " + time.strftime("%c"))
 # -------------------------------------------------------
-
-
-# -------------------------------------------------------
-# Now do what have to be done!
-# -------------------------------------------------------
-
-
-# -------------------------------------------------------
 # read input file param.py and set various global variables
 import readinput;
 memtime('readinput');# print memory and time info
 # start some local variables for use below
-nlist = o.nlist;
+nlist = o.nlist; 
+mlist = o.mlist;
 n, m, mx, Np = o.n, o.m, o.mx, o.Np;
 corrtd, matelem = o.corrtd, o.matelem;
 groundstate, justenergy = o.groundstate, o.justenergy
-
+diffoutdir = o.diffoutdir;
 # -------------------------------------------------------
-niter=0;
-for N in nlist:
-	o.n = N;
-	print('');
-	print('========= n = '+str(N)+' ======== '+str(niter+1)+'/'+str(len(nlist))+' ======== ');
-	print('');
+niter=0; lnlist = len(nlist);
+for n in nlist:
+	o.n = n;
+	m, mx = mlist[niter];
+	o.m, o.mx = m, mx;
+	# -------------------------
+	# print iter message
+	prntmsg(o.n,m,mx,niter,lnlist); 
+	# create output directory
+	o.dumy = createoutdir(n,diffoutdir);
+	if n==1: o.ld = 0; # undisplaced basis are used
+	# -------------------------
 	# calc symmetrised phonon basis related quantities
 	# sets global: Nv1l,Nv2l,Norm1l,Norm2l,Norm3l,map21,map32
 	# also sets: n1fsym,n1,n2[,n3],ntot, listn2 [,listn3]
-	basis.fbasis(o.n,m,mx,Np);
+	basis.fbasis(n,m,mx,Np);
 	memtime('basis');# print memory and time info
 	# -------------------------------------------------------
 	# calculate Hamiltonian:

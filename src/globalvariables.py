@@ -9,6 +9,8 @@ inpfile = 0;
 show = 0; corrtd= 0; matelem = 0;
 groundstate = 0; justenergy = 0;
 
+diffoutdir = 0;
+
 gamma=0; kappa=0;
 e1=0; e2=0;
 dt=0;
@@ -78,5 +80,6 @@ ev0 = [];
 #----------------------------------
 
 nlist = [];
+mlist = [];
 
 

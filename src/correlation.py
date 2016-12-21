@@ -16,8 +16,7 @@ from multiprocessing import Pool
 n,m,mx,Np = o.n, o.m, o.mx,o.Np
 wr,wx,wc,wv = o.wr, o.wx, o.wc, o.wv
 dumy = o.dumy;
-n1,n2,n3,ntot = o.n1,o.n2,o.n3,o.ntot;
-lamb0 = o.lamb0;
+n1,ntot = o.n1,o.ntot;
 
 gamma, kappa =	 o.gamma, o.kappa
 if abs(gamma-kappa) > 1e-5: dkapa = 1;
@@ -67,8 +66,7 @@ def gettd(il):
 		# gives RHS of td-schrodinger equation with losses:
 		# gives [-iota*H - (kappa*PhotProjector + gamma*ExcProjector)]psi(t)
 		if dkapa: hdecay = np.concatenate( (kappa*y[range(n1)],gamma*y[range(n1,ntot)]) );
-		else: hdecay = kappa*y
-		
+		else: hdecay = kappa*y	
 		Hpsi = -1j*ham.dot(y) - hdecay;
 		return Hpsi
 	# -----------------------
@@ -78,7 +76,10 @@ def gettd(il):
 		ham = o.ham1 + wv*lamb0*o.Hbsm + wv*lamb0**2*o.sft;
 	else:
 		g = o.lambin0[il]/np.sqrt(o.n);
+		# print('il,o.lambin0[il], np.sqrt(o.n), g = ',il,o.lambin0[il],np.sqrt(o.n),g)
 		ham = o.ham1 + g*o.Hgsm;
+		# if o.n==1: print(ham.toarray())
+	ham = ham.tocsr();
 	# -----------------------
 	row=[0];col=[0];dat=[1];
 	psi0=coo_matrix((dat, (row, col)), shape=(1,ntot));
@@ -91,8 +92,8 @@ def gettd(il):
 	# tlist = [0]; 
 	corr = [1];# correlation fun at t0
 	i = 1; # start from 1, t=0 already done!
-	while r.successful() and i < ntmax: #r.t < tf:
-		tc = i*dt; #r.t+dt; 
+	while r.successful() and i < ntmax: # r.t < tfddd: #
+		tc = i*dt; # r.t+dt;# 
 		psit = r.integrate(tc);
 		# get the correlation function:
 		corr.append(np.vdot(psi0,psit));
@@ -249,6 +250,8 @@ def fcorrft(il):
 	Gw = getFourierTransform(corr,0,dt,wlist,'F');
 	# green function based results:
 	# wlist = wlist - wx ; # shift freq axis
+	if loopover =="lambda0": lamb0 = o.lambin0[il];
+	else: lamb0 = lambda0;
 	GR = Green(wlist-wx,lamb0); 	# analytical Green function
 	return Gw, GR, corr
 
@@ -289,7 +292,8 @@ def corrft():
 		# wv*o.Hbsm + wv*lamb0**2*o.sft
 		# ham.tocsr();# csr for fast matrix vector products.
 	elif loopover == 'wr':
-		o.ham1 = wc*o.Hcsm +wx*o.Hxsm +wv*o.Hvsm +lambda0*wv*o.Hbsm + wv*lambda0**2*o.sft;
+		# print(wc,wv,wv,lambda0)
+		o.ham1 = wc*o.Hcsm + wx*o.Hxsm +wv*o.Hvsm +lambda0*wv*o.Hbsm + wv*lambda0**2*o.sft;
 		o.Hcsm=[]; o.Hxsm=[]; o.Hbsm=[]; o.Hvsm=[];
 	# ------------------------------
 	# Number of processes

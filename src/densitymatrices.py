@@ -161,63 +161,83 @@ def cdms():
 
 	#***************************************************
 	print('      calculating conditional reduced density matrices ')
-	pool=Pool(Np);
-	#****************************************************************
-	# calculate the reduced density matrix of vib DOF of a single site
-	#****************************************************************#
+	# -----------------------------
+	# n=1 case:
+	# -----------------------------
+	if n==1:
+		dm0, dm1 = cdmsn1();
+		writedms(dm0,param,lambin0,fout0);
+		writedms(dm1,param,lambin0,fout1);
+		return
+	# -----------------------------	
+	# n > 1 cass:
+	# -----------------------------
+	pool=Pool(Np);	
+	#*********************************
+	# calculate the reduced density matrix
+	#  of vib DOF of a single site
+	#******************************
 	# calc of dm0
-	#****************************************************************
+	#*******************************
 	print('       calculating dm0 ... ')
 	dm0s = pool.map(getrho0,listn2)  # note list2
 	dm0 = sum(dm0s,0) # sum along which dim, 3? or 0?
 	del dm0s # free memory
-	#****************************************************************
+	writedms(dm0,param,lambin0,fout0);
+	#*********************************
 	# calc of dm0
-	#****************************************************************
+	#*********************************
 	# calc dm1: layers <==> processes
 	print('       calculating dm1 ... ')
 	dm1s = pool.map(getrho1,listn2)  # note list2 again
 	dm1 = sum(dm1s,0) # sum along which dim, 3? or 0?
 	del dm1s # free memory
-	#****************************************************************
+	writedms(dm1,param,lambin0,fout1);
+	#***********************************
 	# calc dm2: layers <==> processes
 	# uses listn2
-	if n>1: # only for >1 molecules
-		print('       calculating dm2 ... ')
-		if n>2:
-			dm2s = pool.map(getrho2,listn3)  # note list3!
-			dm2 = sum(dm2s,0) # sum along dim=0
-			del dm2s # free memory
-		else: # n = 2 case
-			dm2 = getrho2n2()
-	#****************************************************************
-
-	print('      writing output to files ... ')
-	# save dm with param in the first line, rhos in m+1 lines for every lambda
-	f=open(fout0,'ab')
-	np.savetxt(f,param[None],  fmt='%5i, %5i, %10.6f, %10.6f')
-	np.savetxt(f,lambin0[None],  fmt='%10.6f',delimiter=',')
-	for x in dm0:
-		y=symmetrize(x)
-		np.savetxt(f,y, fmt='%15.10f',delimiter=',')
-	f.close()
-
-
-	f=open(fout1,'ab')
-	np.savetxt(f,param[None],  fmt='%5i, %5i, %10.6f, %10.6f')
-	np.savetxt(f,lambin0[None],  fmt='%10.6f',delimiter=',')
-	for x in dm1:
-		y=symmetrize(x)
-		np.savetxt(f,y, fmt='%15.10f', delimiter=',')
-	f.close()
-
-	f=open(fout2,'ab')
-	np.savetxt(f,param[None],  fmt='%5i, %5i, %10.6f, %10.6f')
-	np.savetxt(f,lambin0[None],  fmt='%10.6f',delimiter=',')
-	for x in dm2:
-		y=symmetrize(x)
-		np.savetxt(f,y, fmt='%15.10f', delimiter=',')
-	f.close()
-	
+	print('       calculating dm2 ... ')
+	if n>2:
+		dm2s = pool.map(getrho2,listn3)  # note list3!
+		dm2 = sum(dm2s,0) # sum along dim=0
+		del dm2s # free memory
+	else: # n = 2 case
+		dm2 = getrho2n2()
+	writedms(dm2,param,lambin0,fout2);	
+	pool	.close();
 	return
+#-------------------------------------
+# for n=1 
+#-------------------------------------
+def cdmsn1():
+	#-------------------------------------
+	def getrhon1(p):
+		m = mx; # for n=1, vib cutoff = mx
+		dm1l = np.zeros((nlmax,m+1,m+1));
+		for mi in range(0,m+1):
+			for mj in range(mi,m+1): # only upper triangular
+				for il, evalu, evec in o.eigvv:
+					ci=np.conjugate(evec[p+mi][0]);
+					cj=evec[p+mj][0]
+					xij = ci*cj;
+					dm1l[il,mi,mj] += xij
+		return dm1l
+	#-------------------------------------
+	dm0 = getrhon1(0);
+	dm1 = getrhon1(n1);
+	return dm0, dm1
+#-------------------------------------
+# for writing output files 
+#-------------------------------------
+def writedms(dm,param,lambin0,fout):
+	f=open(fout,'ab')
+	np.savetxt(f,param[None],  fmt='%5i, %5i, %10.6f, %10.6f')
+	np.savetxt(f,lambin0[None],  fmt='%10.6f',delimiter=',')
+	for x in dm:
+		y=symmetrize(x)
+		np.savetxt(f,y, fmt='%15.10f', delimiter=',')
+	f.close()
+	return
+#-------------------------------------
+
 	

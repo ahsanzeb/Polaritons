@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 # for labels: paramteres for the abs spectrum we want to plot.
 #****************************************
 # waterfall plot
-ei=-2; ef= 5; # energy window
+ei=-4; ef= 7; # energy window
 lcol = 'g'; # line colour
 fcol = 'c'; # fill colour exact
 lcol2 = 'k'

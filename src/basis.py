@@ -18,12 +18,25 @@ import globalvariables as o
 # OUT: Norm1list,Norm2list,Norm3list,Hgcoor21,Hgcoor32
 def fbasis(n,m,mx,Np):
 	# sets global: Nv1l,Nv2l,Norm1l,Norm2l,Norm3l,map21,map32
-	print(' ====> calculating basis states ... ')
+	print(' ====> calculating basis states ... ');
+# -------------------------
+#  n =1 case:
+# -------------------------
+	if n == 1:
+		fbasisn1(n,mx);
+		return
+# -------------------------
+# n > 1 cases:
+# -------------------------
 	res=[];
 # -------------------------
 # start lists for one site:
 	for i in range(0,m+1):
 		res.append([i]);
+
+
+
+		
 # -------------------------
 # increase size of elem of lists to n-2 sites:
 #	dnt execute for n<4 cases: range(2,n-1)
@@ -251,11 +264,22 @@ def freq(aset):
 #########################################################################
 
 
+# -------------------------
+#  n =1 case:
+# -------------------------
+def fbasisn1(n,mx):
+	Nv1list=[]; Norm1list=[];
+	for i in range(mx+1):
+		Nv1list.append(i);
+		Norm1list.append(1);
+	o.Nv1l = Nv1list;
+	o.Norm1l = Norm1list;
+	o.n1 = mx+1; o.ntot = 2*(mx+1);
+	return
+# -------------------------
 
 
 
-
-import globalvariables as o
 
 
 #****************************************************************

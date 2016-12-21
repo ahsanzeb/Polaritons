@@ -41,7 +41,7 @@ lmin = 0;
 lmax = 0;
 nlmax = 1;
 # loopover = 'lambda0';
-
+mg = 10;
 
 
 
@@ -146,19 +146,14 @@ if(absorption=='true' and onlyenergy=='true'):
 	onlyenergy=None;
 	#print("       absorption=T so setting onlyenergy=F")
 #-------------------------------------
-if hasattr(param, 'vsn'):
-	vsn = param.vsn
-	if (vsn=='true'):
-		print("       vsn = TRUE ")
-	else:
-		vsn = None
-		#print("       vsn = None ")
-else:
-	if absorption=='true':
-		print(" For absorption, default vsn='true' will be used...");
-		vsn='true';
-	else:
-		vsn=None
+diffoutdir = 1;
+if hasattr(param, 'diffoutdir'):
+	diffoutdir = param.diffoutdir
+elif absorption=='true':
+	diffoutdir =0;
+	print(" For absorption, default diffoutdir=0 will be used...");
+
+
 #-------------------------------------
 # set some default parameters:
 if 1:
@@ -182,47 +177,38 @@ if 1:
 	else:
 		wv = 0.2;
 		print(" wv not set: default = 0.2 will be used...");
-	if hasattr(param, 'n'):
+
+	if hasattr(param, 'nlist'):
+		nlist = param.nlist;
+		n = nlist[-1]; # last, probably the largest
+	elif hasattr(param, 'n'):
 		n= param.n;
 	else:
-		n = 2;
-		print(" n not set: default = 2 will be used...");
-	if hasattr(param, 'm'):
-		m= param.m;
-	else:
-		if n<4:
-			m = 10;
+		n = 1; nlist = [1];
+		print(" n not set: default = 1 will be used...");	
+
+	if hasattr(param, 'mlist'):
+		mlist = param.mlist;
+		if isinstance(mlist[0], list):
+			mlast = mlist[-1];
 		else:
-			m = 2;
-		print(" m not set: default = 10 (n<4) or 2 will be used...");
-	if hasattr(param, 'mx'):
-		mx= param.mx;
+			mlast = mlist; # last, probably the smallest
+			mlist=[mlist];
+	elif n<4:
+			mlast =[10,10]; mlist=[mlast];
+			print(" mlist not set: default [10,10] (n<4) will be used...");
 	else:
-		if n<4 and m<5:
-			mx = 10;
-		else:
-			mx = m;
-		print(" mx not set: default = 10 (n<4,m<5) or m will be used...");
+			mlast =[2,2]; mlist=[mlast];
+			print(" mlist not set: default [2,2] (n>4) will be used...");
+	if len(mlist) < len(nlist):
+		for i in range(len(nlist)-len(mlist)):
+			mlist.append(mlast);
+
 	if hasattr(param, 'Np'):
 		Np= param.Np;
 	else:
 		Np = 8;
 		print(" Np not set: default = 8 will be used...");
-
-
-
-if(absorption=='true'):
-	if hasattr(param, 'lamb0'):
-		lamb0= param.lamb0;
-	else:
-		lamb0 = 1.0;
-		print(" lamb0 not set: default = 1.0 will be used...");
-	# set upper cutoff on vib spectrum for green function; ~ 10, not more. 
-	# if mx > 10:
-	# 	mg = 10;
-	# else:
-	# 	mg = mx;
-	mg = 10;
 
 
 if hasattr(param, 'loopover'):
@@ -265,14 +251,6 @@ if td != 'true':
 		tolr = 1e-8;
 		print(" tolr not set: default = 1e-8 will be used...");
 #-------------------------------------
-print(" m, mx = ", m,mx);
-if mx < m:
-	mx=m; print("was mx < m =====> setting mx=m")
-#-------------------------------------
-if n==1:
-	print('stop: n=1 not in python code..., use mathematica code')
-	exit()
-#-------------------------------------
 if (abs(wc-wx)<1e-6 and td != 'true'):
 		detuning = 0;
 		# print("			detuning < 1e-6")
@@ -286,43 +264,15 @@ else:
 # vib basis are displaced in {x_i} by ld*lamb0
 if hasattr(param, 'ld'):
 	ld = param.ld;
-	if (absorption=='true' and lamb0 ==0):
-		ld = 0;
+	lamtol = 1e-4; 
+	if (loopover=='wr' and lambda0<lamtol): ld = 0;
+	if (loopover=='lambda0' and nlmax==1 and lmin<lamtol): ld = 0;
 else:
-	ld=0
-print(" ld = ", ld)
+	ld=0.5
 if (ld > 0.5 or ld < 0):
 	print("  stop: only 0 < ld < 0.5 can be useful!")
 	exit()
-
 #-------------------------------------
-
-
-
-if hasattr(param, 'nlist'):
-	nlist = param.nlist;
-else:
-	nlist = [n];
-for x in nlist:
-	if x <2:
-		print(' n < 2 not working .... ')
-		exit();
-
-
-
-
-#****************************************************************
-# create dir for output dm
-if vsn=='true':
-	dumy="data/n-all"
-else:
-	dumy="data/n-"+str(n)
-path = os.getcwd();
-path = path+"/"+dumy
-os.makedirs(path, exist_ok=True)
-
-
-
 
 #****************************************************************
 # set global variables:
@@ -343,12 +293,14 @@ else:
 		mx = m;
 
 # for all types of calculations
-o.nlist = nlist;
-o.n, o.m, o.mx, o.Np =n,m,mx,Np;
+o.nlist, o.mlist = nlist, mlist;
+# o.n, o.m, o.mx, o.Np =n,m,mx,Np;
+o.Np = Np;
+
 o.wr, o.wx, o.wc, o.wv=wr,wx,wc,wv
 o.ld=ld
 o.nstates = nstates
-o.dumy=dumy
+o.diffoutdir = diffoutdir
 
 if 1:
 	o.lmin, o.lmax,  o.nlmax = lmin,lmax, nlmax
@@ -363,10 +315,6 @@ if corrtd:
 	o.nwmax = nwmax ; o.mg  = mg;
 	o.show = show
 	o.ntmax = int(tf/dt);
-
-if matelem or corrtd:
-	o.lamb0 = lamb0;
-
 
 if matelem or groundstate:
 	o.itermax,  o.tolr=itermax, tolr

@@ -18,6 +18,7 @@ listn2, listn3 = o.listn2, o.listn3
 detuning = o.detuning;
 corrtd = o.corrtd;
 
+#print("n,m,mx =",n,m,mx )
 #****************************************************************
 # flattens output of pool.map to make a list of elements
 flat = lambda l: [item for sublist in l for item in sublist];
@@ -219,7 +220,16 @@ def fHx(i):
 #  Hamiltonain: parallel
 #****************************************************************
 def hamilt():
-	print(' ====> calculating Hamiltonian ... ')
+	print(' ====> calculating Hamiltonian ... ');
+# -------------------------
+#  n =1 case:
+# -------------------------
+	if n == 1:
+		hamiltn1();
+		return
+# -------------------------
+# n > 1 cases:
+# -------------------------
 	pool=Pool(Np) # Np processes
 
 	if ld>0:
@@ -286,91 +296,70 @@ def hamilt():
 		print("        Hc,x calculated... ")
 	
 	pool.close() # this pool does not know various variables calculated after its start
-	
 	#****************************************************************
 	# form complete Hamiltonain and set global variables:
 	# Hcsm, Hxsm, Hvsm, Hbsm, Hgsm, sft
 	#****************************************************************
-	
-	row=[];col=[];dat=[];
-	for x in Hb:
-		row.append(x[0])
-		col.append(x[1])
-		dat.append(x[2])
-	Hbsm=coo_matrix((dat, (row, col)), shape=(ntot, ntot))
-	del Hb # free memory
-	
-	row=[];col=[];dat=[];
-	for x in Hg:
-		row.append(x[0])
-		col.append(x[1])
-		dat.append(x[2])
-	Hgsm=coo_matrix((dat, (row, col)), shape=(ntot, ntot))
-	del Hg # free memory
-	
-	row=[];col=[];dat=[];
-	for x in Hv:
-		row.append(x[0])
-		col.append(x[1])
-		dat.append(x[2])
-	o.Hvsm=coo_matrix((dat, (row, col)), shape=(ntot, ntot))
-	del Hv # free memory
-	
+	o.Hgsm = coomat(Hg,1); del Hg;
+	o.Hbsm = coomat(Hb,1); del Hb;
+	o.Hvsm = coomat(Hv,0); del Hv;
 	if (corrtd or detuning):
-		row=[];col=[];dat=[];
-		for x in Hc:
-			row.append(x[0])
-			col.append(x[1])
-			dat.append(x[2])
-		o.Hcsm=coo_matrix((dat, (row, col)), shape=(ntot, ntot))
-		del Hc # free memory
-		row=[];col=[];dat=[];
-		for x in Hx:
-			row.append(x[0])
-			col.append(x[1])
-			dat.append(x[2])
-		o.Hxsm=coo_matrix((dat, (row, col)), shape=(ntot, ntot))
-		del Hx # free memory
-		del row # free memory
-		del col
-		del dat
-	# complete Hg & Hg matrices from upper triangular
-	#Hv,Hc,Hx are diagonal so dont's do anything!
-	o.Hbsm = Hbsm + Hbsm.transpose() - diags(Hbsm.diagonal(),0)
-	o.Hgsm = Hgsm + Hgsm.transpose() - diags(Hgsm.diagonal(),0)
-
-
+		o.Hcsm = coomat(Hc,0); del Hc
+		o.Hxsm = coomat(Hx,0); del Hx
 	# shifts due to half displaced basis
-	# ld=1/2==> photon block: +1/4 *n*wv*lamb0**2 
-	# ld=1/2==> exciton block: -3/4 *n*wv*lamb0**2 
-	row=[];col=[];dat=[];
-	disp1=n*ld**2;
-	disp2=n*ld**2 - 2*ld;
+	disp1=n*ld**2; # photon block
+	disp2=n*ld**2 - 2*ld; # exciton block
+	sftm = [];
 	for i in range(n1):
-		row.append(i)
-		col.append(i)
-		dat.append(disp1)
-	for i in range(n2*(mx+1)):
-		row.append(n1+i)
-		col.append(n1+i)
-		dat.append(disp2)
-	o.sft=coo_matrix((dat, (row, col)), shape=(ntot, ntot));
-	del row # free memory
-	del col
-	del dat
+		sftm.append([i,i,disp1])
+	for i in range(n1,ntot):
+		sftm.append([i,i,disp2])
+	o.sft= coomat(sftm,0); del sftm;
 	# ------------------------------------------
 	return
 
 
 
+def hamiltn1():
+	# ------------------------
+	# undisplaced phonon basis will be used for n=1
+	# ------------------------
+	Hg = [];
+	for i in range(mx+1):
+		Hg.append([i,n1+i,1]);
+	o.Hgsm = coomat(Hg,1); del Hg;
+	Hb = [];
+	for i in range(1,mx+1):
+		Hb.append([i-1,i,sqrt(i)]);
+	o.Hbsm = coomat(Hb,1);  del Hb;
+	Hv = [];
+	for i in range(0,mx+1):
+		Hv.append([i,i,i]);
+		Hv.append([n1+i,n1+i,i]);
+	o.Hvsm = coomat(Hv,0);  del Hv;
+	if (corrtd or detuning):
+		Hc = [];
+		for i in range(0,mx+1):
+			Hc.append([i,i,1]);
+		o.Hcsm = coomat(Hc,0);  del Hc;
+		Hx = [];
+		for i in range(0,mx+1):
+			Hx.append([n1+i,n1+i,1]);
+		o.Hxsm = coomat(Hx,0);  del Hx;
+	o.sft= coomat([],0); # undisplaced basis
+	# ------------------------
+	return
 
-
-
-
-
-
-
-
-
+def coomat(X,sym):
+		row=[];col=[];dat=[];
+		for x in X:
+			row.append(x[0])
+			col.append(x[1])
+			dat.append(x[2])
+		Y=coo_matrix((dat, (row, col)), shape=(ntot, ntot))
+		if sym:
+			# complete matrices from upper/lower triangular
+			Y = Y + Y.transpose() - diags(Y.diagonal(),0)
+		return Y
 
 

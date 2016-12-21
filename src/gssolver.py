@@ -9,7 +9,7 @@ from eigsolver import fdiagl, fdiagw
 n,m,mx,Np = o.n, o.m, o.mx,o.Np
 wr,wx,wc,wv = o.wr, o.wx, o.wc, o.wv
 dumy = o.dumy;
-n1,n2,ntot = o.n1,o.n2,o.ntot;
+ntot = o.ntot;
 detuning, lamb0, eshft, nstates = o.detuning, o.lamb0, o.eshft, o.nstates
 
 lmin,lmax, nlmax = o.lmin, o.lmax,  o.nlmax;
