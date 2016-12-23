@@ -288,9 +288,9 @@ else:
 	groundstate = 1;
 	if onlyenergy == 'true':
 		justenergy = 1;
-	else:
-		print(' vib dm: setting mx=m, mx > m not implemented... ');
-		mx = m;
+	#else:
+	#	print(' vib dm: setting mx=m, mx > m not implemented... ');
+	#	mx = m;
 
 # for all types of calculations
 o.nlist, o.mlist = nlist, mlist;

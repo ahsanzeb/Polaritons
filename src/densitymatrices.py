@@ -10,7 +10,7 @@ n,m,mx,Np = o.n, o.m, o.mx,o.Np
 wr,wx,wc,wv = o.wr, o.wx, o.wc, o.wv
 dumy = o.dumy;
 n1,n2 = o.n1,o.n2;
-
+n1fsym = o.n1fsym;
 lmin,lmax, nlmax = o.lmin, o.lmax,  o.nlmax;
 loopover= o.loopover;
 lambin0 = o.lambin0;
@@ -44,7 +44,7 @@ def symmetrize(a):
 def getrho0(jchunk):
 	#dm0l = [[[0.0]*(m+1) for x in range(m+1)] for il in range(nlmax)];
 	#dm0l = np.ndarray(dm0l);
-	dm0l = np.zeros((nlmax,m+1,m+1));
+	dm0l = np.zeros((nlmax,mx+1,mx+1));
 	for jj in range(jchunk[0],jchunk[1]):
 		m1 = o.Norm2l[jj];
 		for mj1 in range(0,m+1):
@@ -74,9 +74,9 @@ def getrho0P2ss(jchunk):
 	for jj in range(jchunk[0],jchunk[1]):
 		nmj = nm + jj;
 		for mj1 in range(m+1,mx+1):
-			i1 = o.map21[jj,mj1] + nmj;
-			for mj2 in range(mj1,mx+1): # upper triangular of rho0 only
-				i2 = o.map21[jj,mj2] + nmj;
+			i1 = mj1*n2 + nmj;
+			for mj2 in range(mj1,mx+1):
+				i2 = mj1*n2 + nmj;
 				for il, evalu, evec in o.eigvv:
 					ci=np.conjugate(evec[i1][0]);
 					cj=evec[i2][0];
@@ -88,7 +88,7 @@ def getrho0P2ss(jchunk):
 # diag in special site mj: 
 # rho[mk1,mk2]; mk1,mk2 in set jj
 # that reduce to the same sym set kk (for n-2 sites).
-def getrho0P2ss(kchunk):
+def getrho0P2os(kchunk):
 	dm0l = np.zeros((nlmax,mx+1,mx+1));
 	nm = n1fsym - (m+1)*n2;
 	for kk in range(kchunk[0],kchunk[1]):
@@ -97,14 +97,14 @@ def getrho0P2ss(kchunk):
 			jj1 = o.map32[kk,mk1];
 			Pj1 = o.Norm2l[jj1];
 			nmj1 = nm + jj1;	
-			for mk2 in range(mk1,m+1): # upper triangular of rho0 only
+			for mk2 in range(mk1,m+1):
 				jj2 = o.map32[kk,mk2];
 				Pj2 = o.Norm2l[jj2];
 				nmj2 = nm + jj2;	
 				xij = Pkkn* np.sqrt(Pj1*Pj2);
 				for mj in range(m+1,mx+1):
-					i1 = mj + nmj1;
-					i2 = mj + nmj2;
+					i1 = mj*n2 + nmj1;
+					i2 = mj*n2 + nmj2;
 					for il, evalu, evec in o.eigvv:
 						ci=np.conjugate(evec[i1][0]);
 						cj=evec[i2][0];
@@ -112,7 +112,7 @@ def getrho0P2ss(kchunk):
 	return dm0l
 #-------------------------
 # n==2 version:
-def getrho0P2ssn2(mj1):
+def getrho0P2osn2(mj1):
 		dm0l = np.zeros((nlmax,mx+1,mx+1));
 		nm = n1fsym - (m+1)*n2;
 		xij0=0.5;#m1*(n-1)/(n*xx); m1=1,xx=1
@@ -127,14 +127,14 @@ def getrho0P2ssn2(mj1):
 					ci=np.conjugate(evec[i1][0]);
 					cj=evec[i2][0];
 					dm0l[il,mk1,mk2] += ci*cj*xij0;
-	return dm0l
+		return dm0l
 #--------------------------------------------
 # btw fsym and extra:
 #--------------------------------------------
 # special site mj > m so contrib to only rho[mj1,mj],
 # with mj1 in fsym set i that reduce to the same sym set
 # jj as for extra state's sym set part.
-def getrho0P2os(jchunk):
+def getrho0P2fe(jchunk):
 	dm0l = np.zeros((nlmax,mx+1,mx+1));
 	nm = n1fsym - (m+1)*n2;
 	for jj in range(jchunk[0],jchunk[1]):
@@ -270,19 +270,19 @@ def cdms():
 	dm0s = pool.map(getrho0,listn2)  # note list2
 	dm0 = sum(dm0s,0) # sum along 0 ==> pool map
 	# due to extra basis ---------------
-	# extra-extra: type 1
+	# extra-extra: spec site (type 1)
 	dm0s = pool.map(getrho0P2ss,listn2);
 	dm0 += sum(dm0s,0);
-	# extra-extra: type 2
-	dm0s = pool.map(getrho0P2os,listn2)
-	dm0 += sum(dm0s,0);
-	# fsym-extra:
+	# extra-extra: other site (type 2)
 	if n==2:
-		dm0s = pool.map(getrho0P2ssn2,range(0,m+1))
+		dm0s = pool.map(getrho0P2osn2,range(0,m+1))
 		dm0 += sum(dm0s,0);
 	elif n>2:
-		dm0s = pool.map(getrho0P2ss,listn3)
+		dm0s = pool.map(getrho0P2os,listn3)
 		dm0 += sum(dm0s,0);
+	# fsym-extra:
+	dm0s = pool.map(getrho0P2fe,listn2)
+	dm0 += sum(dm0s,0);
 	del dm0s # free memory
 	# -----------------------------------
 	writedms(dm0,param,lambin0,fout0);
