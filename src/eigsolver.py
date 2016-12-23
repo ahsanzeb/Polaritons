@@ -6,13 +6,11 @@ import sys
 
 
 # define local to avoid writing o. every time!
-n,m,mx = o.n, o.m, o.mx
 wr,wx,wc,wv = o.wr, o.wx, o.wc, o.wv
 eshft, nstates = o.eshft, o.nstates
 tolr, itermax = o.tolr, o.itermax 
 justenergy = o.justenergy
 lambda0= o.lambda0;
-
 
 # LOWER BOUND ON ENERGY: lambda
 def elb(l0):
@@ -52,7 +50,7 @@ def fdiagl(lamb):
 			print(" eigenvalues, vectors not converged!")
 
 	elp = evalu+enlb + eshft;
-	if nstates <= 5:
+	if nstates <= 10:
 		print("il, lam0, Elp = ",il,lamb0, elp);
 		sys.stdout.flush()
 	if (justenergy):
@@ -64,7 +62,7 @@ def fdiagl(lamb):
 # diagonalisation: for wr loop. sigma=?
 def fdiagw(lamb):
 	il=lamb[0]; wr = lamb[1];
-	g= wr/np.sqrt(n);
+	g= wr/np.sqrt(o.n);
 	# with sigma=E_LowerBound, A = ham-sigma*I
 	# becomes positive definite (ham symmetric --> A symmetric) 
 	enlb=elbw(wr) # lower bound on E_LP

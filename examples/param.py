@@ -3,14 +3,24 @@
 # for absorption 
 # ******************************************************
 absorption = 'true';
-# td = 'true';
-# nstates = 400; # -ve means all states
-#n=10;# n = no. of sites
-nlist = [1,2,3,4]; #range(1,21,1); # [2,3,4,5]
-mlist=[[2,5],[2,3]];
+td = 'true';
+#nstates = 10; # -ve means all states
+#n=2;# n = no. of sites
+#m=50;
+
+nlist = [2]*50; # range(2,3,1); # [2,3,4,5]
+#mlist=[50,50];
+
+ld =0.5; # amount in units of lamb0 to displace the basis
+
+#mlist=[[5,5]]; # [[50,50],[30,40],[10,15],[6,10],[6,10],[6,10]];
 #m=2; # cutoff on vib basis
 #mx=3; #cuttoff for extra basis
 
+if 1:
+	mlist=[[50,50]];
+	for m in range(1,100,1):
+		mlist.append([m,m])
 
 diffoutdir = 0; # old vsn='true';
 
@@ -25,7 +35,7 @@ tf = 100.0; # total time tf in units of 1/wr; def = 100
 dt = 0.1 # time interval for correlation data; TDSE is integrated between all t,t+dt
 nwft = 300;
 
-e1,e2 = -4,7; # energy window for FT absorption data, w.r.t. wx=0
+e1,e2 = -1.5,2.5; # energy window for FT absorption data, w.r.t. wx=0
 #show = 1; # 0,1 show plot of absorption and correlation functions
 # ******************************************************
 
@@ -33,7 +43,7 @@ e1,e2 = -4,7; # energy window for FT absorption data, w.r.t. wx=0
 # for ground state calculations
 # ******************************************************
 # stop after energy calculations. Dont calc dm's.
-# onlyenergy = 'true'
+onlyenergy = 'true'
 
 # Now after loop over lambda/wr and N:
 # wr and lamb0 are defined by the old style for loopover wr/lambda 
@@ -47,16 +57,16 @@ nwmax = 1 # for delta_wr = 0.25
 
 # nwmax=nwft # old usage: FT no. of freq points
 
-lambda0 = 0; # lambda0 for loop over wr calculations
-lmin=1.5;
-lmax=2.0;
+lambda0 = 1.5; # lambda0 for loop over wr calculations
+lmin=2.5;
+lmax=2.5;
 nlmax=1 # for delta_wr = 0.25
 
 # set loop over either lambda0 or wr:
 loopover = 'lambda0' 	#  loop over lambda0 (\lambda_0)
 #loopover = 'wr'  	#  loop over wr (\omega_R)
 
-lamb0 = lmin; # old lam0, just for compatibility, hope not needed anymore
+#lamb0 = lmin; # old lam0, just for compatibility, hope not needed anymore
 # ******************************************************
 
 
@@ -64,14 +74,13 @@ lamb0 = lmin; # old lam0, just for compatibility, hope not needed anymore
 # ******************************************************
 # for any calculation
 # ******************************************************
-ld = 0.5; # amount in units of lamb0 to displace the basis
 # ******************************************************
 # for both absorption (if td != true) and gs calculations
 # ******************************************************
 Np = 8; # number of processors
 # options for lobpcg
 itermax = 200; 
-tolr=1e-8;
+tolr=1e-10;
 # ******************************************************
 
 

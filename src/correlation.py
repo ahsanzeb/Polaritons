@@ -8,6 +8,7 @@ from numpy import pi, exp
 from scipy.sparse import coo_matrix, diags
 import matplotlib.pyplot as plt
 from multiprocessing import Pool
+import decimal
 
 # define local to avoid writing o. every time!
 # at risk of setting these at the time of first import of this module only.
@@ -16,7 +17,11 @@ from multiprocessing import Pool
 n,m,mx,Np = o.n, o.m, o.mx,o.Np
 wr,wx,wc,wv = o.wr, o.wx, o.wc, o.wv
 dumy = o.dumy;
-n1,ntot = o.n1,o.ntot;
+n1,n2,ntot = o.n1,o.n2,o.ntot;
+n1fsym = o.n1fsym;
+ld = o.ld;
+tolr, itermax = o.tolr, o.itermax 
+
 
 gamma, kappa =	 o.gamma, o.kappa
 if abs(gamma-kappa) > 1e-5: dkapa = 1;
@@ -74,17 +79,33 @@ def gettd(il):
 	if loopover == "lambda0":
 		lamb0 = o.lambin0[il];
 		ham = o.ham1 + wv*lamb0*o.Hbsm + wv*lamb0**2*o.sft;
+		psi0 = createpsi0(o.ld*lamb0);
+		print('n*wv*lamb**2 = ',n*wv*(o.ld*lamb0)**2)
 	else:
 		g = o.lambin0[il]/np.sqrt(o.n);
 		# print('il,o.lambin0[il], np.sqrt(o.n), g = ',il,o.lambin0[il],np.sqrt(o.n),g)
 		ham = o.ham1 + g*o.Hgsm;
+		psi0 = createpsi0(o.ld*lambda0);
 		# if o.n==1: print(ham.toarray())
 	ham = ham.tocsr();
-	# -----------------------
-	row=[0];col=[0];dat=[1];
-	psi0=coo_matrix((dat, (row, col)), shape=(1,ntot));
-	# psi0 = psi0.tocsr();
-	psi0 = psi0.toarray()[0];
+
+	# psi0 =  Psi0fromPhotgs(ham); # use only if 
+			# issues with large factorial handling etc
+			#  are not resolved with decimal module
+	if 0:
+		# print(' handmade: Psi0 = --------------------')
+		# print(psi0)
+		nplt = 400
+		# print('hand: ',psi0[51:55])
+		# print('ind51: Nv,Pi =',o.Nv1l[51],o.Norm1l[51:55])
+		plt.plot(range(nplt),psi0[0:nplt],'sr',ms=10)
+		psi0 =  Psi0fromPhotgs(ham);
+		# print('calc: ',psi0[51:55])
+		print('Psi0gs = --------------------')
+		plt.plot(range(nplt),np.abs(psi0[0:nplt]),'og',ms=5)
+		plt.show()
+		_exit()
+
 	t0 = 0;
 	# start complex integrator:
 	r = ode(fInteg).set_integrator('zvode', method='bdf')
@@ -104,7 +125,7 @@ def gettd(il):
 	if not r.successful():
 		print("getd: r.successful() = F !! stop?!");
 	corr = np.array(corr); # tlist = np.array(tlist);
-	
+	del r
 #--------------------------
 	return corr # , tlist
 #----------------------------------------------------------
@@ -182,7 +203,7 @@ def fwriteCorr(il,tlist, corr, fnametd):
 	header =" "+str(n)+" "+str(m)+" "+str(mx)+" "+str(nwmax)+" "+str(ntmax);
 	header += " "+str(wr)+" "+str(lamb0)+" "+str(wc)+" "+str(wx)+" "+str(wv);
 	header += " "+str(gamma)+ " "+str(kappa)+ " "+str(tf)+ " "+str(dt);
-	np.savetxt(f, corrOUT,fmt='%15.10f%15.10f%15.10f', delimiter=' ', header=header,comments='#')
+	np.savetxt(f, corrOUT,fmt='%15.10f %15.10f %15.10f', delimiter=' ', header=header,comments='#')
 	f.close();
 	f=open(fnametd,'at')
 	print('    ',file=f)
@@ -208,7 +229,7 @@ def fwriteFT(il,wlist, Gw, GR, fnametd, ntmax):
 	header =" "+str(n)+" "+str(m)+" "+str(mx)+" "+str(nwmax)+" "+str(ntmax);
 	header += " "+str(wr0)+" "+str(lamb0)+" "+str(wc)+" "+str(wx)+" "+str(wv);
 	header += " "+str(gamma)+ " "+str(kappa)+ " "+str(tf)+ " "+str(dt);
-	np.savetxt(f, absOUT,fmt='%15.10f%15.10f%15.10f%15.10f', delimiter=' ', header=header,comments='#')
+	np.savetxt(f, absOUT,fmt='%15.10f %15.10f %15.10f %15.10f', delimiter=' ', header=header,comments='#')
 	f.close();
 	f=open(fnametd,'at')
 	print('    ',file=f)
@@ -256,17 +277,95 @@ def fcorrft(il):
 	return Gw, GR, corr
 
 
+# -----------------------------------------------------
+# calculate the initial state, no vibrations, just a photon.
+# in displaced basis, this is a coherent state for all sites
+# we can construct it using createpsi0() below
+# or calculate it using Psi0fromPhotgs() as the gs of 
+#  photon block with zeros padded at the end to make dim = ntot.
+# ----------------------------------
+# These two should match only for a large vib cutoff because
+#	the constructed one is for infinite cutoff whereas
+# 	the calculated one is obviously for a finite cutoff.
+# -----------------------------------------------------
+
+# -----------------------------------------------------
+def Psi0fromPhotgs(Hfull):
+	# psi0 already stored? when not stores: o.psi0=[];
+	if len(o.psi0)>0: 	
+		return o.psi0	
+	# create:
+	if ld>0: # for displaced basis
+		Hphot=Hfull[0:n1,0:n1];
+		from scipy.sparse.linalg import lobpcg
+		ev0 = np.random.rand(n1,1);
+		evalu, evec = lobpcg(A=Hphot, X=ev0, tol=10e-10, maxiter=150,largest=False, verbosityLevel=0);	
+		print('Hphot: Eval = ',evalu);
+		psi0 = np.zeros(ntot);
+		psi0[0:n1] = evec; # evec.T[0];
+	else: # for undisplaced basis
+		psi0 = np.zeros(ntot);
+		psi0[0] = 1;
+	# store this to global array for reuse if wr loop
+	if loopover=='wr':
+		o.psi0 = psi0;
+	return psi0
+#--------------------------------------
 
 
+	
 
-
-
-
-
-
-
-
-
+# create psi0: important case is when ld>0, coherent state for every site
+def createpsi0(lam0):
+	# psi0 already stored? when not stores: o.psi0=[];
+	if len(o.psi0)>0:
+		return o.psi0	
+	# create:
+	if ld>0: # for displaced basis
+		psi0 = np.zeros(ntot);
+		psi0p=[]; row=[]; col=[];
+		cont=decimal.Context(prec=15, Emax=999, clamp=1);
+		decl0 = decimal.Decimal.from_float(lam0);
+		for i in range(n1fsym):
+			ii= int(o.Factlist1[i]);
+			Nv = int(o.Nv1l[i]);
+			xa = cont.power(decl0,Nv);
+			#print('------- xa = ',round(xa,5))
+			if ii <0: 
+				print('---- i ,ii fit kuj??? = ',i,ii)
+			y = decimal.Decimal(ii).sqrt();
+			z = xa/y
+			# print('-----------Decimal(50)-------')
+			# print('x,y,z = ',x,y,z)	
+			x = float(z)* exp(-o.n*lam0**2/2) * np.sqrt(o.Norm1l[i]);
+			if x> 1e-12: # remove very small numbers to avoid numpy/scipy crash
+				psi0[i] = x;
+		# ----------- 'extra' basis --------------
+		mn = n1fsym - (m+1)*n2;
+		for jj in range(n2):
+			ii= int(o.Factlist2[jj]);
+			Nv = int(o.Nv2l[jj]); 
+			xa = cont.power(decl0,Nv);
+			y = decimal.Decimal(ii).sqrt();
+			z = xa/y;
+			x = float(z)* exp(-o.n*lam0**2/2) * np.sqrt(o.Norm2l[jj]);
+			for mj in range(m+1,mx+1):
+				factmj = int(math.factorial(mj));
+				factmjsq = decimal.Decimal(factmj).sqrt();
+				xa = cont.power(decl0,mj);
+				x *= xa/factmjsq;
+				if x> 1e-12: # remove very small numbers to avoid numpy/scipy crash
+					i = mn + mj*n2 + jj;
+					psi0[i] = x;
+		# ----------- 'extra' basis --------------
+	else: # for undisplaced basis
+		psi0 = np.zeros(ntot);
+		psi0[1] = 1;
+	#psi0 = psi0.tocsr();
+	# store this to global array for reuse if wr loop
+	if loopover=='wr':
+		o.psi0 = psi0;
+	return psi0
 
 # -----------------------------------------------------
 # absoprtion option 1: time evolution
@@ -294,8 +393,9 @@ def corrft():
 	elif loopover == 'wr':
 		# print(wc,wv,wv,lambda0)
 		o.ham1 = wc*o.Hcsm + wx*o.Hxsm +wv*o.Hvsm +lambda0*wv*o.Hbsm + wv*lambda0**2*o.sft;
-		o.Hcsm=[]; o.Hxsm=[]; o.Hbsm=[]; o.Hvsm=[];
+		o.Hcsm=[]; o.Hxsm=[]; o.Hbsm=[]; o.Hvsm=[]; o.sft= [];
 	# ------------------------------
+	# print(o.ham1.toarray())
 	# Number of processes
 	if nlmax<Np:
 		Npl = nlmax;
@@ -307,9 +407,11 @@ def corrft():
 	else:
 		# fresh pool
 		pool=Pool(Npl);
-		results = pool.map(fcorrft, range(nlmax))
+		results = pool.map(fcorrft, range(nlmax));
+		o.ham1 = []; o.Hbsm=[];o.sft=[]; o.Hgsm=[];
 		pool.close();
 	# ------------------------------
+	
 	wlist = np.linspace(e1,e2,nwmax);
 	tlist = np.linspace(0, tf, ntmax);
 	print(" ntmax = ",ntmax);
@@ -317,6 +419,7 @@ def corrft():
 	# ------------------------------
 	il = 0;
 	for Gw, GR, corr in results:
+		#print(np.abs(Gw))
 		fwriteFT(il, wlist, Gw, GR, dumy+'/abs-vs-w-td.txt', ntmax); # write FT file
 		fwriteCorr(il, tlist, corr, dumy+'/corr-vs-t-td.txt');# write Correlation file
 		il += 1;

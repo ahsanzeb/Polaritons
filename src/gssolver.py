@@ -41,7 +41,7 @@ def gssolve():
 
 	if loopover == 'lambda0':
 		print('      calculating eigenvector/values... loop over lambda0 ')
-		g= np.sqrt(n); g= wr/g;
+		g= wr/np.sqrt(n);
 		if (detuning==1):
 			print("      detuning != 0 ")
 			print("      ham1 =wc*Hcsm + wx*Hxsm + g*Hgsm + wv*Hvsm")

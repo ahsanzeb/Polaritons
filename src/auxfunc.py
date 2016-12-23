@@ -1,5 +1,4 @@
 
-
 import os
 path = os.getcwd();
 
@@ -21,5 +20,5 @@ def createoutdir(N,diffoutdir):
 		dpath = path+"/"+dumy
 		os.makedirs(dpath, exist_ok=True)
 	return dumy
-	
+
 

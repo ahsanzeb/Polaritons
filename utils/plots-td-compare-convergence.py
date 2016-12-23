@@ -29,7 +29,6 @@ lines = fin.readlines();
 ldat = len(lines);
 carryon=True;
 istart = 0; ignu=0; results = []; headers = []; maxvals = [];
-b=[];
 while carryon==True:
 	# read parameters:
 	line = lines[istart];
@@ -59,9 +58,6 @@ while carryon==True:
 	maxval = np.amax(a[:,1:],axis=0);
 	# print("maxval = ",maxval);
 	maxvals.append(maxval);
-	if ignu < 10:
-		b.append(a[:,1]);
-
 #.............................
 	iy = ignu;
 	offset = -iy # (ny-iy)*5
@@ -87,11 +83,72 @@ maxval = np.amax(np.array(maxvals),axis=0);
 
 fname='data/n-all/abs-vs-t-dt-normalised.txt';
 i = 0;
-for a in results[10:]:
+nm = len(results)//2;
+b00 = results[0][:,1];
+b05 = results[nm][:,1];
+nw = len(b00);
+resld00=[];
+resld05=[];
+a00 = results[1][:,1];
+a05 = results[nm+1][:,1];
+res00=[];res05=[];
+for a in results:
 	if 1:
-		a[:,1] = (a[:,1]-b[i])/maxval[0];
+		a[:,1] = a[:,1]/maxval[0];
 		a[:,2] = a[:,2]/maxval[1];
 		a[:,3] = a[:,3]/maxval[2];
+
+
+	if i>0 and i <nm:
+		resld00.append(np.sqrt(np.sum((a[:,1] - b00)**2))/nw);
+		res00.append(np.sqrt(np.sum((a[:,1] - a00)**2))/nw);
+		a00 = a[:,1];
+	elif i >nm:
+		resld05.append(np.sqrt(np.sum((a[:,1] - b05)**2))/nw);	
+		res05.append(np.sqrt(np.sum((a[:,1] - a05)**2))/nw);
+		a05 = a[:,1];
+	i +=1
+
+
+plt.xlim(2,30)
+plt.plot(range(1,nm),res00,'sg',ms=8,label='ld = 0.0');
+plt.plot(range(1,nm),res05,'or',ms=8,label='ld = 0.5');
+plt.show()
+
+
+if 0:
+	plt.figure()
+	plt.semilogy(range(1,nm),res00,'sg',ms=8,label='ld = 0.0');
+	plt.semilogy(range(1,nm),res05,'or',ms=8,label='ld = 0.5');
+
+plt.semilogy(range(1,nm),resld00,'sy',ms=8,label='ld = 0.0');
+plt.semilogy(range(1,nm),resld05,'ob',ms=8,label='ld = 0.5');
+
+plt.show()
+exit()
+
+plt.figure()
+
+plt.xlim(1,50);
+plt.xlabel('Vib cutoff $M$',fontsize=20);
+txt = '$Residual(M):=\sqrt{\sum_{\omega_i}{|G(\omega_i)_M-G(\omega_i)_{50}|^2}}/\sum_{\omega_i} 1$';
+txt2 = r'$Residual(M):=\sqrt{\overline{ (G_M(\omega)-G_{50}(\omega) )^2 }}$';
+plt.title('Convergenvce test for absorption \n'+txt,fontsize=18);
+
+plt.ylabel('$Residual(M)$',fontsize=20);
+plt.legend();
+plt.tight_layout();
+plt.savefig('conveergence-abs-w-m.pdf', format='pdf');
+plt.show()
+exit()
+
+
+
+
+
+
+
+if 0:
 	header = headers[i];
 	f=open(fname,'ab');
 	np.savetxt(f, a,fmt='%15.10f %15.10f %15.10f %15.10f', delimiter=' ',header=header,comments=' ')

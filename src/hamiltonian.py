@@ -4,7 +4,7 @@ import globalvariables as o
 from multiprocessing import Pool
 from numpy import sqrt
 from scipy.sparse import coo_matrix, diags
-
+import numpy as np
 
 #****************************************************************
 # sets global var: Hcsm, Hxsm, Hvsm, Hbsm, Hgsm, sft
@@ -12,12 +12,14 @@ from scipy.sparse import coo_matrix, diags
 
 # define local to avoid writing o. every time!
 n,m,mx,Np = o.n, o.m, o.mx, o.Np;
-ld = o.ld
+ld = o.ld;
+# ld  = 0.5;
 n1fsym,n1,n2,n3,ntot = o.n1fsym,o.n1,o.n2,o.n3,o.ntot;
 listn2, listn3 = o.listn2, o.listn3
 detuning = o.detuning;
 corrtd = o.corrtd;
 
+# print('mod ham: n1,n2,ntot, mx = ',n1,n2,ntot, mx )
 #print("n,m,mx =",n,m,mx )
 #****************************************************************
 # flattens output of pool.map to make a list of elements
@@ -26,6 +28,7 @@ flat = lambda l: [item for sublist in l for item in sublist];
 # calculates matrix elements of Hb for a given jj in range(0,n2)
 # unexcited-sites-diagonal part:
 def fHb(jj):
+# 	print('fHb: n1,n2,ntot, mx = ',n1,n2,ntot, mx)
 	Hbloc=[];
 	for mi in range(1,mx+1):
 		# transitions only for the same jj but adjuscent mi's.
@@ -41,11 +44,12 @@ def fHb(jj):
 # Photon: extra-basis: s.s
 def fHbP2ss(jj):
 	Hblp2ss=[];
+	mn2j =n1fsym -(m+1)*n2 + jj;
 	for mj2 in range(m+1,mx+1):
 		mj1 = mj2 - 1;	
 		# transitions only for the same jj but adjuscent mi's.
-		i1= n1fsym + (mj1-m-1)*n2 + jj;
-		i2= n1fsym + (mj2-m-1)*n2 + jj;
+		i1= mj1*n2 +mn2j;
+		i2= mj2*n2 +mn2j;
 		hbij = sqrt(mj2); 
 		Hblp2ss.append([i1,i2,-ld*hbij]); 
 	return Hblp2ss
@@ -54,20 +58,23 @@ def fHbP2ss(jj):
 # special-sites-diagonal part: Pos = Photon other site
 def fHbP2os(kchunk):
 	hb2pos = [];
+	mn2 = n1fsym -(m+1)*n2
 	for kk in range(kchunk[0],kchunk[1]):
 		Pkk = o.Norm3l[kk];
 		for mk2 in range(1,m+1):
 			mk1 = mk2 - 1;
 			jj1 = o.map32[kk,mk1];
 			jj2 = o.map32[kk,mk2];
-			Pjj1=o.Norm2l[jj1];
-			Pjj2=o.Norm2l[jj2];
+			Pjj1= o.Norm2l[jj1];
+			Pjj2= o.Norm2l[jj2];
+			yy = sqrt(mk2);
+			xx = sqrt(Pjj1*Pjj2);
+			xij=Pkk*(n-1)*yy/xx; # -ld displaced
+			mnj1 = mn2 + jj1;
+			mnj2 = mn2 + jj2;
 			for mj in range(m+1,mx+1):
-				i1= n1fsym + (mj-m-1)*n2 + jj1; # coordinates
-				i2= n1fsym + (mj-m-1)*n2 + jj2;
-				yy = sqrt(mk2);
-				xx = sqrt(Pjj1*Pjj2);
-				xij=Pkk*(n-1)*yy/xx; # -ld displaced
+				i1= mj*n2 + mnj1;
+				i2= mj*n2 + mnj2;
 				hb2pos.append([i1,i2,-ld*xij]);
 	return hb2pos
 #--------------------------------
@@ -75,10 +82,12 @@ def fHbP2os(kchunk):
 def fHbP2osn2(mj1): # pool map range(0,m), not m+1
 	hb2posn2 = [];
 	mj2 = mj1 + 1;
+	mn2j1 = n1fsym-(m+1)*n2 + mj1
+	mn2j2 = n1fsym-(m+1)*n2 + mj2
+	xij = sqrt(mj2);
 	for mj in range(m+1,mx+1):
-		i1 = n1fsym + (mj-m-1)*n2 + mj1;
-		i2 = n1fsym + (mj-m-1)*n2 + mj2;
-		xij = sqrt(mj2);
+		i1 = mj*n2 + mn2j1;
+		i2 = mj*n2 + mn2j2;
 		hb2posn2.append([i1,i2,-ld*xij]);
 	return hb2posn2
 # ------------------------------
@@ -88,9 +97,9 @@ def fHbP12ss(jj):
 	mj1 = m; mj2 = m+1;	
 	# transitions only for the same jj but adjuscent mi's.
 	i1 = o.map21[jj,mj1];
-	i2= n1fsym + jj;#i2= n1fsym + (mj2-m-1)*n2 + jj;
-	Pii=o.Norm1l[i1];
-	Pjj=o.Norm2l[jj];
+	i2 = n1fsym + jj;#i2= n1fsym + (mj2-m-1)*n2 + jj;
+	Pii= o.Norm1l[i1];
+	Pjj= o.Norm2l[jj];
 	hbij = sqrt(mj2*n*Pjj/Pii); 
 	return [i1,i2,-ld*hbij];
 # ------------------------------
@@ -112,8 +121,8 @@ def fHb1(jchunk):
 				mj2 = mj1 + 1;
 				i1 = o.map21[jj,mj1];
 				i2 = o.map21[jj,mj2];
-				m11=o.Norm1l[i1];
-				m12=o.Norm1l[i2];
+				m11= o.Norm1l[i1];
+				m12= o.Norm1l[i2];
 				yy = sqrt(mj2);
 				xx = sqrt(m11*m12);
 				xij = -ld*m1*n*yy/xx; # -ld displaced 
@@ -130,8 +139,8 @@ def fHb2(kchunk):
 				mj2 = mj1 +1;
 				i1 = o.map32[kk,mj1];
 				i2 = o.map32[kk,mj2];
-				m11=o.Norm2l[i1];
-				m12=o.Norm2l[i2];
+				m11= o.Norm2l[i1];
+				m12= o.Norm2l[i2];
 				yy = sqrt(mj2);
 				xx = sqrt(m11*m12);
 				xij=-ld*m1*(n-1)*yy/xx; # -ld displaced
@@ -225,14 +234,15 @@ def hamilt():
 #  n =1 case:
 # -------------------------
 	if n == 1:
-		hamiltn1();
+		hamiltn1(o.mx);
 		return
 # -------------------------
 # n > 1 cases:
 # -------------------------
 	pool=Pool(Np) # Np processes
-
+	# -----------------------------------------
 	if ld>0:
+		# -----------------------------------------
 		# displaced basis:
 		# H_{\lambda} has matrix elements in both photon and exciton blocks
 		# 	H ===> H 	+	N*wv*l0^2 
@@ -245,7 +255,7 @@ def hamilt():
 			Hb2=flat(Hb2);
 			if mx>m:
 				HbP2os = pool.map(fHbP2osn2,range(m));
-				HbP2os=flat(HbP2os);
+				HbP2os = flat(HbP2os);
 			else:
 				HbP2os = [];
 		elif (n>2):
@@ -253,27 +263,38 @@ def hamilt():
 			Hb2=flat(Hb2);
 			if mx>m:
 				HbP2os = pool.map(fHbP2os,listn3);
-				HbP2os=flat(HbP2os);
+				HbP2os = flat(HbP2os);
 			else:
 				HbP2os = [];
+
 		Hb1 = pool.map(fHb1,listn2);
-		Hb1=flat(Hb1);
+		Hb1 = flat(Hb1);
 		if mx>m:
 			HbP2ss = pool.map(fHbP2ss,range(0,n2));
 			HbP2ss = flat(HbP2ss);
 			HbP12ss = pool.map(fHbP12ss,range(0,n2));
 		else:
 			HbP12ss = []; HbP2ss=[];
+
 		Hb2b = pool.map(fHb,range(0,n2));
 		Hb2b=flat(Hb2b);
 		Hb = Hb1+Hb2+Hb2b+HbP2os+HbP2ss+HbP12ss;
+		if 0:
+			print('------------');
+			print(Hb1)
+			print(Hb2)
+			print(Hb2b)
+			print(HbP2os)
+			print(HbP2ss)
+			print(HbP12ss)
+	# -----------------------------------------
 	else:
+		Hb = [];
 		# undisplaced basis: only electronically excited site is vib coupled:
 		# calc of non-zero matrix elements of H_b = sum_n[c_n^deggar.c_n.b_n]
 		Hb = pool.map(fHb,range(0,n2));
 		Hb=flat(Hb);
-		if 0:
-			print("Hb = ", Hb )
+	# -----------------------------------------
 	print("        Hb calculated...")
 
 	Hg=pool.map(getHg,listn2);
@@ -309,6 +330,7 @@ def hamilt():
 	# shifts due to half displaced basis
 	disp1=n*ld**2; # photon block
 	disp2=n*ld**2 - 2*ld; # exciton block
+	# not -2*n*ld: sum_i[cidag*ci (-2lam)] = -2lam*sum_i[cidag*ci] = -2lam
 	sftm = [];
 	for i in range(n1):
 		sftm.append([i,i,disp1])
@@ -316,11 +338,12 @@ def hamilt():
 		sftm.append([i,i,disp2])
 	o.sft= coomat(sftm,0); del sftm;
 	# ------------------------------------------
+	#print('o.sft='); print(o.sft)
 	return
 
 
 
-def hamiltn1():
+def hamiltn1(mx):
 	# ------------------------
 	# undisplaced phonon basis will be used for n=1
 	# ------------------------

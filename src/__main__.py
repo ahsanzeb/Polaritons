@@ -29,6 +29,7 @@ n, m, mx, Np = o.n, o.m, o.mx, o.Np;
 corrtd, matelem = o.corrtd, o.matelem;
 groundstate, justenergy = o.groundstate, o.justenergy
 diffoutdir = o.diffoutdir;
+old = o.ld; # to reset ld value for n!=1
 # -------------------------------------------------------
 niter=0; lnlist = len(nlist);
 for n in nlist:
@@ -37,10 +38,14 @@ for n in nlist:
 	o.m, o.mx = m, mx;
 	# -------------------------
 	# print iter message
-	prntmsg(o.n,m,mx,niter,lnlist); 
+	prntmsg(n,m,mx,niter,lnlist); 
 	# create output directory
 	o.dumy = createoutdir(n,diffoutdir);
 	if n==1: o.ld = 0; # undisplaced basis are used
+	else: o.ld = old;
+	
+	#o.ld = 0.1*niter;
+	print('o.ld = ',o.ld)
 	# -------------------------
 	# calc symmetrised phonon basis related quantities
 	# sets global: Nv1l,Nv2l,Norm1l,Norm2l,Norm3l,map21,map32

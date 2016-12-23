@@ -1,4 +1,5 @@
 
+import globalvariables as o
 
 # calculate Nv{1,2,3}List, mapping21 and mapping32
 # Norm1list,Norm2list,Norm3list,Hgcoor21,Hgcoor32 
@@ -11,7 +12,7 @@ import numpy as np
 import math
 import sys
 
-import globalvariables as o
+import decimal
 
 #########################################################################
 # IN: n = no. of sites, m = max no. of phonon per site
@@ -33,10 +34,6 @@ def fbasis(n,m,mx,Np):
 # start lists for one site:
 	for i in range(0,m+1):
 		res.append([i]);
-
-
-
-		
 # -------------------------
 # increase size of elem of lists to n-2 sites:
 #	dnt execute for n<4 cases: range(2,n-1)
@@ -81,8 +78,15 @@ def fbasis(n,m,mx,Np):
 #	print(Hgcoor32)
 # ---------------------------------------
 # No of phonons list, Normalisation list
-	Nv2list,Norm2list = getNvNorm(res,n-1)
+# 	Nv2list,Norm2list = getNvNorm(res,n-1)
+	if o.corrtd and o.ld>0:
+		Nv2list,Norm2list,Fact2list = getNvNormFac(res,n-1)
+	else:
+		Nv2list,Norm2list = getNvNorm(res,n-1);
+		Fact2list = [];
 	ntot2 = len(Norm2list)
+
+
 	
 # ---------------------------------------
 # add a site, to get basis for N site and
@@ -96,15 +100,17 @@ def fbasis(n,m,mx,Np):
 	del Hgcoor21mis
 #	print(Hgcoor21)
 # No of phonons list, Normalisation list
-	Nv1list,Norm1list = getNvNorm(res,n)
+	if o.corrtd and o.ld>0:
+		Nv1list,Norm1list,Fact1list = getNvNormFac(res,n)
+	else:
+		Nv1list,Norm1list = getNvNorm(res,n);
+		Fact1list = [];
 	ntot1 = len(Norm1list)
-
-# 
-
 
 # ---------------------------------------
 #	print(" n1, n2, n3 = ", ntot1,ntot2,ntot3)
-
+	o.Fact1l = Fact1list;
+	o.Fact2l = Fact2list;
 	o.Nv1l, o.Nv2l = Nv1list, Nv2list
 	o.Norm1l, o.Norm2l, o.Norm3l = Norm1list, Norm2list, Norm3list
 	o.map21,o.map32 = Hgcoor21, Hgcoor32
@@ -213,6 +219,48 @@ def getNorm(resx,nsit):
 			m1=m1/rs # divide by second entry, i.e., frequency
 		Normlist.append(m1);
 	return Normlist
+
+# -----------------------------------------------------
+# creating Psi0 for corrtd, for displaced basis case:
+# -----------------------------------------------------
+#########################################################################
+# for time evolution for correlation function, the initial state with 
+# a photon but no vib in displaced basis is coherent state for every sites!
+# the lambda0=l0 independent factor is calculated here. 
+# Prod_i{l0^n_i}=l0^Nv available at the run time in the corrtd function.
+#########################################################################
+def getNvNormFac(resx,nsit):
+	# also calc factorials for corrtd psi0 with ld>0
+	Nvlist =[]; Normlist=[]; Factlist=[];
+	m0=math.factorial(nsit) # normalisation factor
+	cont=decimal.Context(prec=15, Emax=999, clamp=1)
+	for j in resx:
+		nv=np.sum(j) # total no of phonons
+		Nvlist.append(nv)
+		k=stats.itemfreq(j)
+		m1=m0; fc0 = decimal.Decimal.from_float(1);
+		for kk in k:
+			# n0=factorial of occupation numbers
+			n0=math.factorial(kk[0]);
+			# rhs = take power to the freq
+			# fc0 = fc;
+			# fc = fc0*np.power(n0,kk[1]);
+
+			n0 = decimal.Decimal.from_float(n0);
+			fc0 *= cont.power(n0,int(kk[1]));
+			#print('kk,n0,fc = ',kk,n0,fc0)
+			if fc0 < 0:
+				print('fc0 = ',fc0,np.power(n0,kk[1]))
+				print('fc0*n0^kk1 = ',fc0*np.power(n0,kk[1]))
+				print(' basis: fir kuj panga pai gya!!')
+				exit()
+			# normalisation factor
+			rs=math.factorial(kk[1]) 
+			m1=m1/rs # divide by second entry, i.e., frequency
+		#print('fc = ',fc) ,dtype='int64'
+		Factlist.append(fc0);
+		Normlist.append(m1); #append(int(m1))
+	return Nvlist, Normlist,Factlist
 #########################################################################
 # add a site, keep record of links of old to new basis set in hgcor & links
 # ---------------------------------------
