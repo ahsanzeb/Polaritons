@@ -327,7 +327,7 @@ def createpsi0(lam0):
 		cont=decimal.Context(prec=15, Emax=999, clamp=1);
 		decl0 = decimal.Decimal.from_float(lam0);
 		for i in range(n1fsym):
-			ii= int(o.Factlist1[i]);
+			ii= int(o.Fact1l[i]);
 			Nv = int(o.Nv1l[i]);
 			xa = cont.power(decl0,Nv);
 			#print('------- xa = ',round(xa,5))
@@ -343,17 +343,17 @@ def createpsi0(lam0):
 		# ----------- 'extra' basis --------------
 		mn = n1fsym - (m+1)*n2;
 		for jj in range(n2):
-			ii= int(o.Factlist2[jj]);
+			ii= int(o.Fact2l[jj]);
 			Nv = int(o.Nv2l[jj]); 
 			xa = cont.power(decl0,Nv);
 			y = decimal.Decimal(ii).sqrt();
 			z = xa/y;
 			x = float(z)* exp(-o.n*lam0**2/2) * np.sqrt(o.Norm2l[jj]);
 			for mj in range(m+1,mx+1):
-				factmj = int(math.factorial(mj));
+				factmj = int(factorial(mj));
 				factmjsq = decimal.Decimal(factmj).sqrt();
 				xa = cont.power(decl0,mj);
-				x *= xa/factmjsq;
+				x *= float(xa/factmjsq);
 				if x> 1e-12: # remove very small numbers to avoid numpy/scipy crash
 					i = mn + mj*n2 + jj;
 					psi0[i] = x;

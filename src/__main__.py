@@ -18,6 +18,7 @@ else: o.inpfile = 'param.py';
 print(" ")
 print(" *** *** *** Welcome to Polaritons *** *** *** ")
 print(" Current date & time " + time.strftime("%c"))
+import jani
 # -------------------------------------------------------
 # read input file param.py and set various global variables
 import readinput;

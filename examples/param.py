@@ -8,19 +8,19 @@ td = 'true';
 #n=2;# n = no. of sites
 #m=50;
 
-nlist = [2]*50; # range(2,3,1); # [2,3,4,5]
-#mlist=[50,50];
-
+nlist = [2]*1; # range(2,3,1); # [2,3,4,5]
+# mlist=[[5,5],[5,40],[40,40]];
+mlist=[[13,14],[14,14]]
 ld =0.5; # amount in units of lamb0 to displace the basis
 
 #mlist=[[5,5]]; # [[50,50],[30,40],[10,15],[6,10],[6,10],[6,10]];
 #m=2; # cutoff on vib basis
 #mx=3; #cuttoff for extra basis
 
-if 1:
-	mlist=[[50,50]];
+if 0:
+	mlist=[[5,5]];
 	for m in range(1,100,1):
-		mlist.append([m,m])
+		mlist.append([5,5+m])
 
 diffoutdir = 0; # old vsn='true';
 
