@@ -1,0 +1,145 @@
+
+\begin{filecontents*}{table.tex}
+\begin{tabular}{|l|cccccc|}
+\hline
+% \backslashbox{ $\indset_{N-1}$ }{$m^\ast$}  
+& 0 &  1 &  2 &  3 &  4 &  5 \\
+\hline
+ 0& 0 &  1 &  2 &  3 &  4 &  5 \\
+ 1 &  1 &  6 &  7 &  8 &  9 & 10 \\
+ 2&   2 &  7 & 11 & 12 & 13 & 14 \\
+3 &  3 &  8 & 12 & 15 & 16 & 17 \\
+4 &  4 &  9 & 13 & 16 & 18 & 19 \\
+ 5&  5 & 10 & 14 & 17 & 19 & 20 \\ \cline{2-7}
+ 6&  \multicolumn{1}{|c|}{  6 }& 21 & 22 & 23 & 24 & 25\\
+7 &   \multicolumn{1}{|c|}{ 7 }& 22 & 26 & 27 & 28 & 29\\
+ 8&   \multicolumn{1}{|c|}{ 8 }& 23 & 27 & 30 & 31 & 32\\
+ 9&   \multicolumn{1}{|c|}{ 9 }& 24 & 28 & 31 & 33 & 34\\
+ 10&  \multicolumn{1}{|c|}{ 10} & 25 & 29 & 32 & 34 & 35 \\ \cline{3-7}
+ 11&  11 &  \multicolumn{1}{c|}{ 26 }& 36 & 37 & 38 & 39 \\
+ 12&  12 & \multicolumn{1}{c|}{  27} & 37 & 40 & 41 & 42 \\
+13& 13 &   \multicolumn{1}{c|}{  28} & 38 & 41 & 43 & 44 \\
+14& 14 &   \multicolumn{1}{c|}{  29} & 39 & 42 & 44 & 45 \\  \cline{4-7}
+15&  15 & 30 & \multicolumn{1}{c|}{   40 }& 46 & 47 & 48 \\
+16&  16 & 31 &  \multicolumn{1}{c|}{  41 }& 47 & 49 & 50 \\
+17&  17 & 32 &  \multicolumn{1}{c|}{  42 }& 48 & 50 & 51 \\  \cline{5-7}
+18&  18 & 33 & 43 & \multicolumn{1}{c|}{   49 }& 52 & 53 \\
+19&  19 & 34 & 44 & \multicolumn{1}{c|}{   50 }& 53 & 54 \\  \cline{6-7}
+20&  20 & 35 & 45 & 51 & \multicolumn{1}{c|}{  54 }&  55 \\ \cline{7-7} 
+ \hline
+ \end{tabular}
+\end{filecontents*}
+
+
+
+\documentclass[preprint,12pt]{elsarticle}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{physics}
+\usepackage{comment}
+\usepackage{hyperref}
+\usepackage{color,soul}
+
+
+\usepackage{multirow}
+\usepackage{tikz}
+\usepackage{verbatim}
+\usetikzlibrary{arrows}
+\usetikzlibrary{calc}
+
+
+\newcommand{\az}[1]{{\color{magenta}{#1}}}
+\newcommand{\jk}[1]{{\color{red}{#1}}}
+\newcommand{\pk}[1]{{\color{blue}{#1}}}
+
+\newcommand{\kb}{\ket{0}\!\bra{0}}
+\newcommand{\klb}{\ket{\lambda}\!\bra{0}}
+\newcommand{\kbl}{\ket{0}\!\bra{\lambda}}
+\newcommand{\klbl}{\ket{\lambda}\!\bra{\lambda}}
+
+\newcommand{\symset}{\mathcal{S}}
+\newcommand{\cntset}{\mathcal{P}} 
+\newcommand{\indset}{\mathcal{I}} 
+
+\newcommand{\maptoN}{{{\mathcal{M}}}_{N-1 \mapsto N}}
+\newcommand{\maptoNa}{{\mathcal{M}}_{N-2 \mapsto N-1}}
+
+\begin{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{center}
+
+\begin{tikzpicture}
+ \node [xshift=0cm,yshift=0cm] at (current page.south west){\input{table.tex}};
+ \def\xo{-2.09};
+% \def\yo{5.05};
+ \def\yo{5.09};
+ \def\dx{5/6};
+ \def\dy{-3.058/6};
+  \def\m{6};
+\def\d{0.01}
+
+% shade, top row
+\pgfmathsetmacro{\Ax}{\xo };
+\pgfmathsetmacro{\Ay}{\yo};
+\pgfmathsetmacro{\Bx}{\xo + \m*\dx};
+\pgfmathsetmacro{\Cy}{\yo -\dy+\d};
+\draw[draw=black, fill=blue!30!white, opacity=0.2] (\Ax,\Ay) -- (\Bx,\Ay) -- (\Bx,\Cy) -- (\Ax,\Cy)--(\Ax,\Ay) ;
+
+% labels, top left corner
+\pgfmathsetmacro{\Bx}{\xo-\dx};
+\draw[draw=black] (\Ax,\Ay) -- (\Bx,\Cy);
+\pgfmathsetmacro{\ax}{\xo-0.8*\dx};
+\pgfmathsetmacro{\ay}{\yo - 0.35*\dy};
+\node[] at (\ax,\ay) {{\small $\indset$}};
+\pgfmathsetmacro{\ax}{\xo-0.25*\dx};
+\pgfmathsetmacro{\ay}{\yo - 0.7*\dy};
+\node[] at (\ax,\ay) {{\small $m$}};
+
+% shade, left col 
+\pgfmathsetmacro{\Ax}{\xo};
+\pgfmathsetmacro{\Ay}{\yo};
+\pgfmathsetmacro{\Bx}{\xo-\dx};
+\pgfmathsetmacro{\Cy}{\yo+21*\dy};
+\draw[draw=black, fill=blue!30!white, opacity=0.2] (\Ax,\Ay) -- (\Bx,\Ay) -- (\Bx,\Cy) -- (\Ax,\Cy)--(\Ax,\Ay);
+
+% shade, top block
+\pgfmathsetmacro{\Ax}{\xo + 0*\dx};
+\pgfmathsetmacro{\Ay}{\yo + 0*\dy};
+\pgfmathsetmacro{\Bx}{\xo + \m*\dx};
+\pgfmathsetmacro{\Cy}{\yo + \m*\dy};
+%\node[circle,draw=black,minimum size=10] at (\da,\db) {10};
+%\draw[draw=green, fill=green, opacity=0.3] (\xo,\yo) -- (\da,\db) -- (0,1) -- cycle;
+\draw[draw=red, fill=red, opacity=0.2] (\Ax,\Ay) -- (\Bx,\Ay) -- (\Bx,\Cy) -- cycle;
+
+%shade, all lower blocks
+\foreach \i in {0,...,5}{
+\pgfmathsetmacro{\Ax}{\xo + (\i+1)*\dx};
+\pgfmathsetmacro{\Ay}{\yo + ((\i+1)*\m-\i*(\i+1)/2 )*\dy};
+\pgfmathsetmacro{\Bx}{\xo + \m*\dx};
+\pgfmathsetmacro{\Cy}{\yo +  ((\i+2)*\m-(\i+1)*((\i+1)+1)/2)*\dy};
+%\node[circle,draw=black,minimum size=10] at (\da,\db) {10};
+%\draw[draw=green, fill=green, opacity=0.3] (\xo,\yo) -- (\da,\db) -- (0,1) -- cycle;
+\draw[draw=green, fill=green, opacity=0.2] (\Ax,\Ay) -- (\Bx,\Ay) -- (\Bx,\Cy) -- cycle;
+}
+
+\end{tikzpicture}
+\end{center}
+
+
+
+
+\end{document}
