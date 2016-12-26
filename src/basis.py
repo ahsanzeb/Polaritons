@@ -7,6 +7,7 @@ import globalvariables as o
 #########################################################################
 # Ahsan Zeb, 03 Jun 2016
 #########################################################################
+import scipy
 from scipy import stats
 import numpy as np
 import math
@@ -46,16 +47,16 @@ def fbasis(n,m,mx,Np):
 	else:
 		getNvNorm(res,n,m); # sets global arrays
 
-	n1fsym = scipy.special.binom(m+n, n); # old thing with name n1
+	n1fsym = int(scipy.special.binom(m+n, n)); # old thing with name n1
 	# No. of symmetrised basis for |0c,1x>
-	n2 = scipy.special.binom(m+n-1, n-1); 
+	n2 = int(scipy.special.binom(m+n-1, n-1)); 
 	# new n1: so that we dont have change shifts by n1 everywhere
 	n1 = n1fsym + (mx-m)*n2;
 	# total number of basis states
 	ntot = n1 + (mx+1)*n2;
 	
 	if (n>2):
-		n3 = scipy.special.binom(m+n-2, n-2); # basis size for N-2 sites
+		n3 = int(scipy.special.binom(m+n-2, n-2)); # basis size for N-2 sites
 		o.n1fsym,o.n1,o.n2,o.n3,o.ntot = n1fsym,n1,n2,n3,ntot; 
 	o.n1fsym,o.n1,o.n2,o.ntot = n1fsym,n1,n2,ntot;
 	# -------------------------------------------------------
@@ -84,10 +85,10 @@ def getNvNormFac(res,n,m):
 	m0=math.factorial(n) # normalisation factor
 	cont=decimal.Context(prec=15, Emax=999, clamp=1)
 	n3 = 0;
-	n2 = scipy.special.binom(m+n-1, n-1);
+	n2 = int(scipy.special.binom(m+n-1, n-1));
 	# obtain everything for n-2 site case:
 	if n >2:
-		n3 = scipy.special.binom(m+n-2, n-2);
+		n3 = int(scipy.special.binom(m+n-2, n-2));
 		for j in res[0:n3]:
 			nv=np.sum(j) # total no of phonons
 			Nvlist.append(nv)
@@ -126,7 +127,7 @@ def getNvNormFac(res,n,m):
 			Factlist.append(fc0);
 			Norm1list.append(m1);
 			m2 = m1*rzero/n;
-			Normlist2.append(m2);
+			Norm2list.append(m2);
 	# obtain everything for n site case:
 	for j in res[n2:]:
 			nv=np.sum(j) # total no of phonons
@@ -154,10 +155,10 @@ def getNvNorm(res,n,m):
 	Norm1list=[]; Norm2list=[]; Norm3list=[];
 	m0=math.factorial(n) # normalisation factor
 	n3 = 0;
-	n2 = scipy.special.binom(m+n-1, n-1);
+	n2 = int(scipy.special.binom(m+n-1, n-1));
 	# obtain everything for n-2 site case:
 	if n >2:
-		n3 = scipy.special.binom(m+n-2, n-2);
+		n3 = int(scipy.special.binom(m+n-2, n-2));
 		for j in res[0:n3]:
 			nv=np.sum(j) # total no of phonons
 			Nvlist.append(nv)
@@ -185,7 +186,7 @@ def getNvNorm(res,n,m):
 				m1=m1/rs # divide by second entry, i.e., frequency
 			Norm1list.append(m1);
 			m2 = m1*rzero/n;
-			Normlist2.append(m2);
+			Norm2list.append(m2);
 	# obtain everything for n site case:
 	for j in res[n2:]:
 			nv=np.sum(j) # total no of phonons
