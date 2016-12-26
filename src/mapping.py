@@ -1,5 +1,6 @@
 
 # construct the map of indices from N-1 site to N-site.
+import globalvariables as o
 
 import scipy
 import numpy as np
@@ -65,11 +66,7 @@ def getmap(n,m):
 			karg,mapl = triangles(colist,iarg,karg,nn,m);
 			mapfull=np.concatenate((mapfull,mapl));
 		arglist=mkarglist(arglist); # make argument list
-	return mapfull
+	o.map21 = mapfull;
+	return 
 #-----------------------------
-
-if 1:
-	n =10; m=5;
-	mapfull = getmap(n,m)
-
 

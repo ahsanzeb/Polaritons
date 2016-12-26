@@ -94,11 +94,11 @@ def getrho0P2os(kchunk):
 	for kk in range(kchunk[0],kchunk[1]):
 		Pkkn = o.Norm3l[kk] * (n-1)/n;
 		for mk1 in range(0,m+1):
-			jj1 = o.map32[kk,mk1];
+			jj1 = o.map21[kk,mk1];
 			Pj1 = o.Norm2l[jj1];
 			nmj1 = nm + jj1;	
 			for mk2 in range(mk1,m+1):
-				jj2 = o.map32[kk,mk2];
+				jj2 = o.map21[kk,mk2];
 				Pj2 = o.Norm2l[jj2];
 				nmj2 = nm + jj2;	
 				xij = Pkkn* np.sqrt(Pj1*Pj2);
@@ -176,10 +176,10 @@ def getrho2(kchunk):
 	for kk in range(kchunk[0],kchunk[1]):
 		m1n = o.Norm3l[kk] * (n-1)/n;
 		for mj1 in range(0,m+1):
-			i1 = o.map32[kk,mj1];
+			i1 = o.map21[kk,mj1];
 			m11=o.Norm2l[i1];
 			for mj2 in range(mj1,m+1): # upper triangular of rho0 only
-				i2 = o.map32[kk,mj2];
+				i2 = o.map21[kk,mj2];
 				m12=o.Norm2l[i2];
 				xx = np.sqrt(m11*m12);
 				xij0=m1n/xx;

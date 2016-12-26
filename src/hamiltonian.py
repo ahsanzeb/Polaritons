@@ -63,8 +63,8 @@ def fHbP2os(kchunk):
 		Pkk = o.Norm3l[kk];
 		for mk2 in range(1,m+1):
 			mk1 = mk2 - 1;
-			jj1 = o.map32[kk,mk1];
-			jj2 = o.map32[kk,mk2];
+			jj1 = o.map21[kk,mk1];
+			jj2 = o.map21[kk,mk2];
 			Pjj1= o.Norm2l[jj1];
 			Pjj2= o.Norm2l[jj2];
 			yy = sqrt(mk2);
@@ -137,8 +137,8 @@ def fHb2(kchunk):
 		m1 = o.Norm3l[kk];
 		for mj1 in range(0,m):
 				mj2 = mj1 +1;
-				i1 = o.map32[kk,mj1];
-				i2 = o.map32[kk,mj2];
+				i1 = o.map21[kk,mj1];
+				i2 = o.map21[kk,mj2];
 				m11= o.Norm2l[i1];
 				m12= o.Norm2l[i2];
 				yy = sqrt(mj2);
@@ -196,7 +196,7 @@ def fHv1cExtra(jchunk):
 	Hvloc = [];
 	for jj in range(jchunk[0],jchunk[1]):
 		for mj in range(m+1,mx+1):
-			Nvj = o.Nv2l[jj] + mj
+			Nvj = o.Nv1l[jj] + mj
 			i = n1fsym +(mj-m-1)*n2 + jj;
 			Hvloc.append([i,i,Nvj])
 	return Hvloc
@@ -206,7 +206,7 @@ def fHv1cExtra(jchunk):
 def fHv0c(j):
 	Hvloc = [];
 	for mj in range(0,mx+1):
-		Nvj = o.Nv2l[j] + mj
+		Nvj = o.Nv1l[j] + mj
 		jj = n1 + mj*n2 + j
 		Hvloc.append([jj,jj,Nvj])
 	return Hvloc

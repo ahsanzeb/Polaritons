@@ -343,8 +343,8 @@ def createpsi0(lam0):
 		# ----------- 'extra' basis --------------
 		mn = n1fsym - (m+1)*n2;
 		for jj in range(n2):
-			ii= int(o.Fact2l[jj]);
-			Nv = int(o.Nv2l[jj]); 
+			ii= int(o.Fact1l[jj]);
+			Nv = int(o.Nv1l[jj]); 
 			xa = cont.power(decl0,Nv);
 			y = decimal.Decimal(ii).sqrt();
 			z = xa/y;
