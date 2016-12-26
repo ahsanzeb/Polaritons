@@ -7,10 +7,11 @@
 #nstates = 10; # -ve means all states
 #n=2;# n = no. of sites
 #m=50;
-
-nlist = [3]*2; # range(2,3,1); # [2,3,4,5]
+n=5;m=5;mx=5
+nlist = [5]*1; # range(2,3,1); # [2,3,4,5]
 # mlist=[[5,5],[5,40],[40,40]];
-mlist=[[20,20],[20,25]]
+# mlist=[[20,20],[20,25]]
+mlist=[5,5]
 ld =0.5; # amount in units of lamb0 to displace the basis
 
 #mlist=[[5,5]]; # [[50,50],[30,40],[10,15],[6,10],[6,10],[6,10]];
@@ -43,7 +44,7 @@ e1,e2 = -1.5,2.5; # energy window for FT absorption data, w.r.t. wx=0
 # for ground state calculations
 # ******************************************************
 # stop after energy calculations. Dont calc dm's.
-#onlyenergy = 'true'
+onlyenergy = 'true'
 
 # Now after loop over lambda/wr and N:
 # wr and lamb0 are defined by the old style for loopover wr/lambda 
@@ -61,6 +62,8 @@ lambda0 = 1.5; # lambda0 for loop over wr calculations
 lmin=2.0;
 lmax=2.5;
 nlmax=1 # for delta_wr = 0.25
+
+lamb0 = 2.0
 
 # set loop over either lambda0 or wr:
 loopover = 'lambda0' 	#  loop over lambda0 (\lambda_0)
