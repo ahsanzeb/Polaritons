@@ -16,6 +16,8 @@ from multiprocessing import Pool
 #from pathos.multiprocessing import ProcessingPool as Pool
 import decimal
 import mapping
+import time
+
 
 #########################################################################
 def fbasis(n,m,mx,Np):
@@ -83,9 +85,35 @@ def fbasis(n,m,mx,Np):
 		pool.close();
 		# combine the arrays from pool
 		if o.corrtd and o.ld>0:
+			#---------------------------------
+			# python list addition is much faster than creating numpy array
+			#---------------------------------
+			# t0 = time.time();
+			# dt=np.dtype('uint32');dt2=np.dtype('float64');
+			# sz = int(scipy.special.binom(m+n, n));
+			# Factlistnp = np.zeros(sz,	dtype=dt2);
+			# Nvlistnp = np.zeros(sz,	dtype=dt);
+			# Norm1np = np.zeros(sz,	dtype=dt);
+			# Norm2np = np.zeros(sz,	dtype=dt);
+			# Norm3np = np.zeros(sz,	dtype=dt);
+			# l = 0;
+			# for Fctl, Nvl, Nrm1, Nrm2, Nrm3 in results:
+			# 	lt = len(Nvl);
+			# 	#Factlistnp[l:l+lt]= [float(x) for x in Fctl]
+			# 	Nvlistnp[l:l+lt]= Nvl
+			# 	Norm1np[l:l+lt]= Nrm1
+			# 	Norm2np[l:l+lt]= Nrm2
+			# 	Norm3np[l:l+lt]= Nrm3
+			# 	l += lt;
+			# t1 = time.time();
+			#---------------------------------
 			for Fctl, Nvl, Nrm1, Nrm2, Nrm3 in results:
-				Factlist += Fctl; Nvlist += Nvl;
-				Norm1 += Nrm1; Norm2 += Nrm2; Norm3 += Nrm3;		
+				Factlist += Fctl; 
+				Nvlist += Nvl;
+				Norm1 += Nrm1; Norm2 += Nrm2; Norm3 += Nrm3;	
+			# t2 = time.time();
+			# print('time for np arrays + fctl float conversion  = ',t1-t0)
+			# print('time for python lists  = ',t2-t1)
 		else:
 			il = 0
 			for Nvl, Nrm1, Nrm2, Nrm3 in results:
@@ -125,7 +153,7 @@ def fbasis(n,m,mx,Np):
 	# -------------------------------------------------------
 	print(" n_photon, n_exciton, ntot = ", n1, n2*(mx+1), ntot)
 	#print(' calculating mapping ... ')
-	mapping.getmap(n,m);# calculate and set o.map21
+	#mapping.getmapp(n,m,Np);# calculate and set o.map21
 	return
 #-----------------------------------------------
 # make full sets and get nv,norms,fac
@@ -207,7 +235,7 @@ def getNvNorml(resx,n):
 			# to use this function alone, we comput of 
 			# m2 and m3 for all sets in res, and after 
 			# combining all the results from pool,
-			# we take only valid data for Norm2l and NOrm3l,
+			# we take only valid data for Norm2l and Norm3l,
 			# i.e., only from fisrt n2, n3 sets, and discard the rest.	
 			rzero = k[0,1]; # number of sites with 0 vibrations
 			m1=m0;
@@ -277,9 +305,8 @@ def mkevenloadlist(res,nrest,n,m,Np):
 				#print(' > ')				
 			eloadl.append([i1,i2]); ichunk += 1;
 			i1 = i2; v2 += dn;	
-			i = i2 +1;
-		else:
-			i += 1;	
+			#i = i2 +1;
+		i += 1;	
 	#print(' last one =',[i1,l])	
 	eloadl.append([i1,l]); # last chunk
 	return eloadl

@@ -20,6 +20,8 @@ def memtime(thismod):
 	# print the message to stdout:
 	x = ' total memory(MB)/time(s) = ';
 	x += str(np.around(memnw*1e-6,3))+"/"+str(np.around(timnw,3));
+	#with open('tout/'+thismod+'.txt','ab') as f_handle:
+	#	np.savetxt(f_handle,[tim],fmt='%15.8f')
 	if thismod != 'everything':
 		x += ' used by '+thismod+' = '+str(mem)+"/"+str(tim);
 	print(x)

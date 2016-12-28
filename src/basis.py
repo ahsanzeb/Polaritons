@@ -69,8 +69,8 @@ def fbasis(n,m,mx,Np):
 		o.listn3 = mkchunks(Np,n3);
 	# -------------------------------------------------------
 	print(" n_photon, n_exciton, ntot = ", n1, n2*(mx+1), ntot)
-	print(' calculating mapping ... ')
-	mapping.getmap(n,m);# calculate and set o.map21
+	#print(' calculating mapping ... ')
+	#mapping.getmap(n,m);# calculate and set o.map21
 	return
 
 #-----------------------------------------------

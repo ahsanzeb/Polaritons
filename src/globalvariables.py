@@ -57,6 +57,12 @@ map21=[];
 Fact1l = [];
 res = []; 
 nrest = 0;
+# set/used in mapping:
+eloadlmap = [];
+nblksizemap = [];
+argxmap = [];
+strtindsmap = [];
+colsmap = [];
 #----------------------------------
 
 #----------------------------------
