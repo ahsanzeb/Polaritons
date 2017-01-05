@@ -169,11 +169,11 @@ def fHb2n2(mj1):
 def getHg(jchunk):
 	Hgloc = [];
 	for jj in range(jchunk[0],jchunk[1]):
+		m2 = o.Norm2l[jj];
 		for mj in range(0,m+1):
 			j= n1 + mj*n2 + jj # coor in uper right block
 			ii = o.map21[jj,mj]
 			m1 = o.Norm1l[ii];
-			m2 = o.Norm2l[jj];
 			hgij=sqrt(n*m2/m1)
 			Hgloc.append([ii,j,hgij]);
 		# extra basis: diag in mj,jj

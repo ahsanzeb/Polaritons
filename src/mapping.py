@@ -58,12 +58,6 @@ def triangles(colist,iin,k,m):
 		return k, Map
 #-----------------------------
 def getmap(n,m):
-	#-----------------------------
-	# use parallel routine for large systems:
-	if 0 and int(scipy.special.binom(m+n-1, n-1))>10000:
-		Np = o.Np;
-		getmapp(n,m,Np);
-		return
 	#-----------------------------	
 	mapfull = mapn2(m);	# n = 2 case
 	karg = mapfull[-1,-1] +1;
@@ -88,6 +82,7 @@ def getmap(n,m):
 #----------------------------------------------------------
 def trianglesp(p):
 	m = o.m;
+	#print('o.eloadlmap = ',o.eloadlmap)
 	istart, iend = o.eloadlmap[p];
 	nsize = o.nblksizemap[p];
 	#print('o.eloadlmap[p]=',o.eloadlmap[p])
@@ -133,7 +128,13 @@ def trianglesp(p):
 #-----------------------------
 
 
-def getmapp(n,m,Np):
+
+
+
+#---------------------------------------------------------
+# getmapargs(n,m) calculates the arguments for trianglesp
+#---------------------------------------------------------
+def getmapargs(n,m,Np):
 	# -----------------------
 	strtinds = []; args = []; cols =[]; trisize = [];
 	# starting values for n=3 blocks
@@ -161,34 +162,44 @@ def getmapp(n,m,Np):
 			argx += lx;				
 		arg = argx; argx=[];
 
-	# arguments for triangles(colist,iarg,karg,nn,m)
-	if 0:
-		print('list iarg:',args) ;# iarg
-		print('list karg:',strtinds); # colist from this
-		print('list colist*:',cols); # karg
-		print('trisize = ',trisize)
-	if 0:
-		print(len(args))
-		print(len(strtinds))
-		print(len(cols))	
+	#-----------------------------
+	# set global arrays
+	o.argxmap = args;
+	o.strtindsmap = strtinds;
+	o.colsmap = cols;
+
+	#-----------------------------
 	# now make evenload list
 	trisize = np.array(trisize);
-	if len(trisize) < 10*Np:
-		Np = 1;
-		o.Np=Np;
-		print(' len(trisize) < 10*Np so setting Np = 1')
+	# if len(trisize) < 10*Np:
+	# 	Np = 1;
+	# 	o.Np=Np;
+	# 	print(' len(trisize) < 10*Np so setting Np = 1')
 	eloadl, nblksize = mkevenloadlist(trisize,Np)
 	#print(eloadl)
 	# set global arrays: to be used in trianglesp()
 	o.eloadlmap = eloadl;
 	o.nblksizemap = nblksize;
-	o.argxmap = args;
-	o.strtindsmap = strtinds;
-	o.colsmap = cols;
 	#print('XXXX eloadl = ',eloadl)
 	#print('XXXX nblksize = ',nblksize)
+	return 
 
-	#exit()
+
+#---------------------------------------
+# getmapp(n,m,Np) calculates the map
+#---------------------------------------
+def getmapp(n,m,Np):
+	#-----------------------------
+	# use single process for small systems:
+	if int(scipy.special.binom(m+n-1, n-1))<10000:
+		getmap(n,m);
+		return
+	#--------------------------------
+	# calculate the arguments for the 
+	# recursive function trianglesp
+	# and evenload list for pool.map
+	getmapargs(n,m,Np);
+	# Np = o.Np; # getmapargs can reset Np
 	#--------------------------------
 	# now start pool and send jobs
 	#--------------------------------
@@ -215,6 +226,7 @@ def getmapp(n,m,Np):
 		y1 = y2;
 	#--------------------------------
 	o.map21 = mapfull;
+
 #	print(mapfull)
 #	print(np.shape(mapfull))
 #	print(np.prod(np.shape(mapfull)))

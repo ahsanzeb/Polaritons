@@ -8,6 +8,7 @@ from memtime import memtime
 import time, sys, scipy
 
 
+
 if 0:
 	n = 3; m = 5;
 	for nn in range(1,n):
@@ -23,13 +24,16 @@ if 0:
 		if i%N == 0:
 			memtime(str(i));# print memory and time info
 
-if 0:
-	for n in range(3,10):
-		o.m = 5
+if 1:
+	for n in range(20,21):
+		o.m = 8
 		o.mx = o.m;
 		o.Np = 8
 		o.n = n
 		mapping.getmapp(o.n,o.m,o.Np);
+		memtime('basis');# print memory and time info		
+		exit()
+		
 		mapfulp = o.map21; o.map21 = [];
 		mapping.getmap(o.n,o.m);
 		r = np.sum(np.abs(np.array(mapfulp)-np.array(o.map21)))
@@ -37,7 +41,7 @@ if 0:
 			print(' r = ',r,'??????????')
 		else:
 			print('n = ',n,' r = 0; PASSED')
-
+	exit()
 
 
 
