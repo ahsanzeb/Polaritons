@@ -10,9 +10,6 @@ import matplotlib.pyplot as plt
 from multiprocessing import Pool
 import decimal
 
-from scipy.sparse.linalg import lobpcg
-
-
 # define local to avoid writing o. every time!
 # at risk of setting these at the time of first import of this module only.
 ##### any update in the values of these variables will not be considered by the functions of this module, because they use the first-import-time's set values.
@@ -52,6 +49,16 @@ np.set_printoptions(suppress=True)
 		# start with |P(t=0)> = a^dag|0x,0p,0v>, 
 		# evolve to get |P(t)> & get the correlation function <P(0)|P(t)>
 		# Fourier transform to get the absorption
+#----------------------------------
+def getwlist(ntmax,dt):
+	if ntmax%2 == 0:
+		#f = [0, 1, ...,   n/2-1,     -n/2, ..., -1] / (d*n)
+		f = np.linspace(-ntmax/2,ntmax/2-1,ntmax);
+	else:
+		#f = [0, 1, ..., (n-1)/2, -(n-1)/2, ..., -1] / (d*n)   if n is odd
+		f = np.linspace(-(ntmax-1)/2,(ntmax-1)/2,ntmax);
+	f *= 1/(dt*ntmax);
+	return f;
 #--------------------------
 def gettd(il):
 	# time evolves the state with only a photon present
@@ -183,6 +190,39 @@ def getFourierTransform(Xt,ti,dd,wlist,arrow):
 	Xw = np.array(Xw);
 	return Xw
 #--------------------------
+#--------------------------
+def getFT():
+	# Take Fourier Transform: n= 2*ntmax
+	ntime= 1*ntmax + 0;
+	Gw = np.fft.ifft(corr,n=ntime, norm="ortho");
+	Gw = np.fft.fftshift(Gw); # for correct order of freq
+	#Gw = fft(corr); # scipy
+	#wlist = np.fft.fftfreq(ntmax,d=dt);
+	wlist = getwlist(ntmax,dt); # correct ordered freq
+	wlist *= 2*pi; # to get right scale
+	# do we need to calc this full wlist fist?
+	# select the relevant freq window
+	i1,i2 = getFrewWindowCoor(wlist,e1+wx,e2+wx); #+wx because, unshifted scale
+	wlist = wlist[i1:i2];
+	Gw = Gw[i1:i2]	;
+	return Gw, wlist
+#---------------------------------
+def getFrewWindowCoor(wlist,e1,e2):
+	# check if e1,e2 window is bigger?
+	if e1 < wlist[0] or e2 > wlist[ntmax-1]:
+		e1 = wlist[0]; i1=0;
+		e2 = wlist[ntmax-1]; i2=ntmax;
+		return i1,i2
+	# start search from centre of array:
+	ic = ntmax//2;
+	i1 = 0; i2 = 0
+	while wlist[ic-i1] > e1:
+		i1 += 1;
+	i1 = ic - i1;
+	while wlist[ic+i2] < e2:
+		i2 += 1;
+	i2 = ic + i2;
+	return i1,i2
 #---------------------------------
 def fwriteCorr(il,tlist, corr, fnametd):
 	# save correlation vs time
@@ -273,6 +313,7 @@ def Green(wlist,l0):
 	GRlist = np.array(GRlist);
 	return GRlist
 # -------------------------------------------
+
 def fcorrft(il):
 	corr = gettdRK4(il); # calculate correlation
 	E1, E2 = e1+wx, e2+wx;	
@@ -285,7 +326,46 @@ def fcorrft(il):
 	else: lamb0 = lambda0;
 	GR = Green(wlist-wx,lamb0); 	# analytical Green function
 	return Gw, GR, corr
-# -------------------------------------------
+
+
+# -----------------------------------------------------
+# calculate the initial state, no vibrations, just a photon.
+# in displaced basis, this is a coherent state for all sites
+# we can construct it using createpsi0() below
+# or calculate it using Psi0fromPhotgs() as the gs of 
+#  photon block with zeros padded at the end to make dim = ntot.
+# ----------------------------------
+# These two should match only for a large vib cutoff because
+#	the constructed one is for infinite cutoff whereas
+# 	the calculated one is obviously for a finite cutoff.
+# -----------------------------------------------------
+
+# -----------------------------------------------------
+def Psi0fromPhotgs(Hfull):
+	# psi0 already stored? when not stores: o.psi0=[];
+	if len(o.psi0)>0: 	
+		return o.psi0	
+	# create:
+	if ld>0: # for displaced basis
+		Hphot=Hfull[0:n1,0:n1];
+		from scipy.sparse.linalg import lobpcg
+		ev0 = np.random.rand(n1,1);
+		evalu, evec = lobpcg(A=Hphot, X=ev0, tol=10e-10, maxiter=150,largest=False, verbosityLevel=0);	
+		print('Hphot: Eval = ',evalu);
+		psi0 = np.zeros(ntot);
+		psi0[0:n1] = evec; # evec.T[0];
+	else: # for undisplaced basis
+		psi0 = np.zeros(ntot);
+		psi0[0] = 1;
+	# store this to global array for reuse if wr loop
+	if loopover=='wr':
+		o.psi0 = psi0;
+	return psi0
+#--------------------------------------
+
+
+	
+
 # create psi0: important case is when ld>0, coherent state for every site
 def createpsi0(lam0):
 	# psi0 already stored? when not stores: o.psi0=[];
@@ -326,7 +406,7 @@ def createpsi0(lam0):
 		# ----------- 'extra' basis --------------
 	else: # for undisplaced basis
 		psi0 = np.zeros(ntot);
-		psi0[0] = 1;
+		psi0[1] = 1;
 	#psi0 = psi0.tocsr();
 	# store this to global array for reuse if wr loop
 	if loopover=='wr':
@@ -343,6 +423,7 @@ def corrft():
 	print(' ====> calculating absorption: time evolution ... ');
 	# indices for projectors: can we work with sparse?
 	# o.indPp = np.arange(0,n1); o.indPx = np.arange(n1,ntot);
+
 	# ------------------------------
 	# set o.ham1
 	if loopover == 'lambda0':
@@ -379,12 +460,25 @@ def corrft():
 	print(" nwft = ",nwmax);
 	# ------------------------------
 	il = 0;
-	print(' GR ===> GR/2.5 for comparison with exact. ???!!! :o')
 	for Gw, GR, corr in results:
-		# 1/2.5 makes GR peaks equal to the exact for lam=0 case.
-		fwriteFT(il, wlist, Gw, GR/2.5, dumy+'/abs-vs-w-td.txt', ntmax); # write FT file
+		#print(np.abs(Gw))
+		fwriteFT(il, wlist, Gw, GR, dumy+'/abs-vs-w-td.txt', ntmax); # write FT file
 		fwriteCorr(il, tlist, corr, dumy+'/corr-vs-t-td.txt');# write Correlation file
 		il += 1;
+	# ------------------------------
+	if 0: #show:
+	
+		#print(GR.shape)
+		plt.plot(wlist, np.real(Gw),'-r',lw=1,label='$Re[G(w)]$')
+		#plt.plot(wlist, np.real(Gwtw),'-g',lw=1,label='Gwtw')
+		plt.plot(wlist, -np.imag(GR),'-g',lw=1,label='$Im[GR(w)]$')
+		plt.legend()
+		plt.figure()
+		plt.plot(tlist, corr.real,'-r',lw=1,label='$Re[G(t)]$');
+		#plt.plot(tlist, Gwt.real,'-b',label='Gwt');
+		plt.plot(tlist, corr.imag,'g',lw=1,label='$Im[G(t)]$')
+		plt.legend()
+		plt.show()
 	return
 #------------------------------------------------------
 

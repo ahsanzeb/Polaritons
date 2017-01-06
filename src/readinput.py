@@ -87,7 +87,7 @@ if hasattr(param, 'absorption'):
 					print(" tf not set: default = 100 will be used...");
 					print("    ==> ntmax ~ tf/dt = ", int(tf/dt) );
 				# --------------------------
-				tdecay = 10/(kappa+gamma); # time corr decay to ~ 0
+				tdecay = 25/(kappa+gamma); # time corr decay to ~ 0
 				if tf > tdecay:
 					tf = tdecay;
 					print(" tf > tdecay: setting tf = tdecay = 10/(kappa+gamma) = ",tdecay);
@@ -283,7 +283,7 @@ if hasattr(param, 'ld'):
 		if (uselamlist and len(lamlist)==1 and lamlist[0]<lamtol): ld = 0;
 		elif ( not uselamlist and nlmax==1 and lambin0[0]<lamtol): ld = 0;
 	if (ld > 0.5 or ld < 0):
-		print("  stop: only 0 < ld < 0.5 can be useful!")
+		print(" only 0 < ld < 0.5 can be useful. (no? ld>0.5 better if state is excitonic!)")
 		#exit()
 else:
 	ld=0.5;

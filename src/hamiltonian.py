@@ -19,6 +19,8 @@ listn2, listn3 = o.listn2, o.listn3
 detuning = o.detuning;
 corrtd = o.corrtd;
 
+#print('hamiltonian: ld = ',ld)
+
 # print('mod ham: n1,n2,ntot, mx = ',n1,n2,ntot, mx )
 #print("n,m,mx =",n,m,mx )
 #****************************************************************
@@ -332,10 +334,11 @@ def hamilt():
 	disp2=n*ld**2 - 2*ld; # exciton block
 	# not -2*n*ld: sum_i[cidag*ci (-2lam)] = -2lam*sum_i[cidag*ci] = -2lam
 	sftm = [];
-	for i in range(n1):
-		sftm.append([i,i,disp1])
-	for i in range(n1,ntot):
-		sftm.append([i,i,disp2])
+	if abs(ld) > 1e-8:
+		for i in range(n1):
+			sftm.append([i,i,disp1])
+		for i in range(n1,ntot):
+			sftm.append([i,i,disp2])
 	o.sft= coomat(sftm,0); del sftm;
 	# ------------------------------------------
 	#print('o.sft='); print(o.sft)
