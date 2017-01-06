@@ -278,9 +278,10 @@ def fwriteFT(il,wlist, Gw, GR, fnametd, ntmax):
 # -------------------------------------------
 def getFrankCondonEtc(l0):
 	res=[]; 	efac=[];
+	cont=decimal.Context(prec=15, Emax=999, clamp=1);
 	for i in range(mx+1):
 		#x = np.exp(-l0**2)*l0**(2*i)/factorial(i);
-		n0 = decimal.Decimal.from_float(math.factorial(i));
+		n0 = decimal.Decimal.from_float(factorial(i));
 		fc0 = cont.power(l0,2*i);
 		x = np.exp(-l0**2)*float(fc0)/float(n0);
 		res.append(x);
