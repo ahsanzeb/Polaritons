@@ -68,11 +68,12 @@ def gettd(il):
 	# making internal function
 	# to avoid making list of H for loopover lam/wr
 	#--------------------------
+	kappa2 = kappa/2.0; gamma2 = gamma/2.0;
 	def fInteg(t, y):
 		# gives RHS of td-schrodinger equation with losses:
 		# gives [-iota*H - (kappa*PhotProjector + gamma*ExcProjector)]psi(t)
-		if dkapa: hdecay = np.concatenate( (kappa*y[range(n1)],gamma*y[range(n1,ntot)]) );
-		else: hdecay = kappa*y	
+		if dkapa: hdecay = np.concatenate( (kappa2*y[range(n1)],gamma2*y[range(n1,ntot)]) );
+		else: hdecay = kappa2*y;	
 		Hpsi = -1j*ham.dot(y) - hdecay;
 		return Hpsi
 	# -----------------------
