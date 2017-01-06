@@ -36,7 +36,9 @@ justenergy = 0;
 nstates=1;
 absorption='false';
 td = 'false';
-wr = 0; lambda0 = 0; lamlist=[]; lambin0 = [];
+wr = 0; lambda0 = 0; 
+lamlist=[]; uselamlist = 0; 
+lambin0 = [];
 lmin = 0;
 lmax = 0;
 nlmax = 1;
@@ -159,11 +161,6 @@ elif absorption=='true':
 #-------------------------------------
 # set some default parameters:
 if 1:
-	if hasattr(param, 'wr'):
-		wr= param.wr;
-	else:
-		wr = 0.5;
-		print(" wr not set: default = 0.5 will be used...");
 	if hasattr(param, 'wx'):
 		wx= param.wx;
 	else:

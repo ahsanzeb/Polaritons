@@ -121,11 +121,12 @@ def gettdRK4(il):
 	# psi0 = |P(t=0)> = a^dag|0x,0p,0v> = [1,0,0,......,0];
 	#--------------------------		
 	dth = 0.5*dt; dt6 = dt/6;
+	kappa2 = kappa/2.0; gamma2 = gamma/2.0;
 	def yprime(y):
 		if dkapa:
-			hdecay = np.concatenate((kappa*y[range(n1)],gamma*y[range(n1,ntot)]));
+			hdecay = np.concatenate((kappa2*y[range(n1)],gamma2*y[range(n1,ntot)]));
 		else:
-			hdecay = kappa*y	
+			hdecay = kappa2*y;
 		Hpsi = -1j*ham.dot(y) - hdecay;
 		return Hpsi
 	#--------------------------
@@ -366,13 +367,8 @@ def createpsi0(lam0):
 			ii= int(o.Fact1l[i]);
 			Nv = int(o.Nv1l[i]);
 			xa = cont.power(decl0,Nv);
-			#print('------- xa = ',round(xa,5))
-			if ii <0: 
-				print('---- i ,ii fit kuj??? = ',i,ii)
 			y = decimal.Decimal(ii).sqrt();
 			z = xa/y
-			# print('-----------Decimal(50)-------')
-			# print('x,y,z = ',x,y,z)	
 			x = float(z)* exp(-o.n*lam0**2/2) * np.sqrt(o.Norm1l[i]);
 			if x> 1e-12: # remove very small numbers to avoid numpy/scipy crash
 				psi0[i] = x;
