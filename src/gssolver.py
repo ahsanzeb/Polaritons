@@ -12,9 +12,10 @@ dumy = o.dumy;
 ntot = o.ntot;
 detuning, lamb0, eshft, nstates = o.detuning, o.lamb0, o.eshft, o.nstates
 
-lmin,lmax, nlmax = o.lmin, o.lmax,  o.nlmax;
+nlmax = o.nlmax;
 loopover= o.loopover;
 lambda0= o.lambda0;
+lambin0 = o.lambin0;
 
 #************************************************************
 # ground state calculations with loop over lambda or wr
@@ -25,8 +26,8 @@ def gssolve():
 	o.iden = iden.tocsc();
 	o.ev0 = np.random.rand(ntot, nstates) ; # giving 1 vec means k=1, lowest eigenpair.
 
-	lambin0 = np.linspace(lmin,lmax, nlmax);
-	o.lambin0 = lambin0;
+	# lambin0 = np.linspace(lmin,lmax, nlmax);
+	# o.lambin0 = lambin0;
 
 	lambin = []; il=-1;
 	for lamb00 in lambin0:

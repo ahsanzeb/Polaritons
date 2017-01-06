@@ -11,7 +11,7 @@ wr,wx,wc,wv = o.wr, o.wx, o.wc, o.wv
 dumy = o.dumy;
 n1,n2 = o.n1,o.n2;
 n1fsym = o.n1fsym;
-lmin,lmax, nlmax = o.lmin, o.lmax,  o.nlmax;
+nlmax = o.nlmax;
 loopover= o.loopover;
 lambin0 = o.lambin0;
 

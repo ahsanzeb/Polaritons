@@ -62,8 +62,10 @@ lambda0 = 1.5; # lambda0 for loop over wr calculations
 lmin=2.0;
 lmax=2.5;
 nlmax=1 # for delta_wr = 0.25
+if 1:
+	lamlist=[0,0.5,1,1.5,2.0];
 
-lamb0 = 2.0
+#lamb0 = 2.0
 
 # set loop over either lambda0 or wr:
 loopover = 'lambda0' 	#  loop over lambda0 (\lambda_0)

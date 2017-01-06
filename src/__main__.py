@@ -31,12 +31,15 @@ corrtd, matelem = o.corrtd, o.matelem;
 groundstate, justenergy = o.groundstate, o.justenergy
 diffoutdir = o.diffoutdir;
 old = o.ld; # to reset ld value for n!=1
+lamlist = o.lamlist;
+uselamlist = o.uselamlist;
 # -------------------------------------------------------
 niter=0; lnlist = len(nlist);
 for n in nlist:
 	o.n = n;
 	m, mx = mlist[niter];
 	o.m, o.mx = m, mx;
+	if uselamlist: o.lambin0 = [lamlist[niter]]; # to cheat
 	# -------------------------
 	# print iter message
 	prntmsg(n,m,mx,niter,lnlist); 

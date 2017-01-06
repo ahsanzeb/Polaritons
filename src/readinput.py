@@ -2,8 +2,8 @@
 
 import globalvariables as o
 import os, sys
+import numpy as np
 from numpy import pi
-
 
 #888888888888888888888888888
 # system parameters
@@ -36,7 +36,7 @@ justenergy = 0;
 nstates=1;
 absorption='false';
 td = 'false';
-wr = 0; lambda0 = 0
+wr = 0; lambda0 = 0; lamlist=[]; lambin0 = [];
 lmin = 0;
 lmax = 0;
 nlmax = 1;
@@ -135,7 +135,9 @@ else:
 #------------------------------------- 
 if hasattr(param, 'onlyenergy'):
 	onlyenergy = param.onlyenergy
-	if (onlyenergy=='true'):
+	if (onlyenergy=='true' and absorption=='true'):
+		onlyenergy = None;
+	elif(absorption !='true'):
 		print("       onlyenergy = TRUE ")
 	else:
 		onlyenergy = None
@@ -187,6 +189,12 @@ if 1:
 		n = 1; nlist = [1];
 		print(" n not set: default = 1 will be used...");	
 
+	# if lamlist, then use for m in mlist, lambda0 in lamlist,
+	if hasattr(param, 'lamlist'):
+		lamlist = param.lamlist;
+		if len(nlist)==1:
+			nlist = nlist*len(lamlist);
+
 	if hasattr(param, 'mlist'):
 		mlist = param.mlist;
 		if isinstance(mlist[0], list):
@@ -215,17 +223,26 @@ if hasattr(param, 'loopover'):
 	loopover = param.loopover;
 	# loopover which paramter, lambda0 or wr?
 	if loopover == 'lambda0':
-		wr=param.wr # g/sqrt(n)
-		lmin=param.lmin;
-		lmax=param.lmax;
-		nlmax=param.nlmax;
-		print('   calculations would be for loop over lambda0 ... ')
+		if hasattr(param, 'lamlist'):
+			uselamlist = 1;
+			lamlist = param.lamlist;
+			nlmax = 1; # do one by one, as if a nlist is given with nlmax=1.
+			print('   lamlist is given... warning: lambda0 loop not parallel!')
+		else:
+			uselamlist = 0;
+			wr=param.wr # g/sqrt(n)
+			lmin=param.lmin;
+			lmax=param.lmax;
+			nlmax=param.nlmax;
+			lambin0 = np.linspace(lmin,lmax, nlmax);
+			print('   loopover == "lambda0" ... ')
 	elif loopover == 'wr':
 		lambda0 = param.lambda0
 		lmin=param.wmin;
 		lmax=param.wmax;
 		nlmax=param.nwmax;
-		print('   calculations would be for loop over wr ... ')
+		lambin0 = np.linspace(lmin,lmax, nlmax);
+		print('   loopover = "wr" ... ')
 	else: # if absorption !='true':
 		print('   error: set option loopover to lambda0 or wr (with relevant min,max,nmax data)')
 		exit()
@@ -264,14 +281,16 @@ else:
 # vib basis are displaced in {x_i} by ld*lamb0
 if hasattr(param, 'ld'):
 	ld = param.ld;
-	lamtol = 1e-4; 
+	lamtol = 0.5; 
 	if (loopover=='wr' and lambda0<lamtol): ld = 0;
-	if (loopover=='lambda0' and nlmax==1 and lmin<lamtol): ld = 0;
+	if loopover=='lambda0':
+		if (uselamlist and len(lamlist)==1 and lamlist[0]<lamtol): ld = 0;
+		elif ( not uselamlist and nlmax==1 and lambin0[0]<lamtol): ld = 0;
+	if (ld > 0.5 or ld < 0):
+		print("  stop: only 0 < ld < 0.5 can be useful!")
+		#exit()
 else:
-	ld=0.5
-if (ld > 0.5 or ld < 0):
-	print("  stop: only 0 < ld < 0.5 can be useful!")
-	#exit()
+	ld=0.5;
 #-------------------------------------
 
 #****************************************************************
@@ -302,10 +321,12 @@ o.ld=ld
 o.nstates = nstates
 o.diffoutdir = diffoutdir
 
-if 1:
-	o.lmin, o.lmax,  o.nlmax = lmin,lmax, nlmax
-	o.loopover =loopover; 
-	o.lambda0=lambda0
+o.lmin, o.lmax,  o.nlmax = lmin,lmax, nlmax
+o.loopover =loopover; 
+o.lambda0=lambda0
+o.lambin0 = lambin0;
+o.uselamlist = uselamlist;
+o.lamlist = lamlist;
 
 # for specific type of calculations
 if corrtd:

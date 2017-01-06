@@ -15,10 +15,10 @@ dumy = o.dumy;
 n1,n2,ntot = o.n1,o.n2, o.ntot;
 detuning, eshft, nstates = o.detuning, o.eshft, o.nstates
 
-lmin,lmax, nlmax = o.lmin, o.lmax,  o.nlmax;
+nlmax = o.nlmax;
 loopover= o.loopover;
 lambda0= o.lambda0;
-
+lambin0 = o.lambin0;
 
 # to supress printing of small floats, print them 0
 np.set_printoptions(suppress=True)
@@ -81,9 +81,9 @@ def fmatelem():
 		o.Hvsm = [];
 
 
-	lambin0 = np.linspace(lmin,lmax, nlmax);
-	print('lmin,lmax, nlmax = ',lmin,lmax, nlmax)
-	o.lambin0 = lambin0;
+	#lambin0 = np.linspace(lmin,lmax, nlmax);
+	#print('lmin,lmax, nlmax = ',lmin,lmax, nlmax)
+	#lambin0 = o.lambin0;
 	lambin = []; il=-1;
 	for lamb00 in lambin0:
 		il=il+1

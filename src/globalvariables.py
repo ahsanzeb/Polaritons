@@ -1,4 +1,7 @@
 
+xx = 0;
+corr = [];
+
 #----------------------------------
 inpfile = 0;
 #----------------------------------
@@ -27,6 +30,9 @@ mg=0;
 lmin=0;lmax=0; nlmax=0;
 loopover=0; 
 lambda0=0;
+lamlist=[];
+lambin0 = [];
+uselamlist = 0;
 
 itermax = 0;
 tolr=0;

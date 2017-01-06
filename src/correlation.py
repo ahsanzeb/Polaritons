@@ -34,9 +34,10 @@ show = 	o.show
 
 kl= kappa/2;
 
-lmin,lmax, nlmax = o.lmin, o.lmax,  o.nlmax;
+nlmax = o.nlmax;
 loopover= o.loopover;
-lambda0= o.lambda0;
+lambda0 = o.lambda0;
+lambin0 =	o.lambin0; # list of lam or wr values
 
 
 # to supress printing of small floats, print them 0
@@ -63,7 +64,7 @@ def getwlist(ntmax,dt):
 def gettd(il):
 	# time evolves the state with only a photon present
 	# psi0 = |P(t=0)> = a^dag|0x,0p,0v> = [1,0,0,......,0];
-	#--------------------------
+	#--------------------------		
 	# making internal function
 	# to avoid making list of H for loopover lam/wr
 	#--------------------------
@@ -79,8 +80,9 @@ def gettd(il):
 	if loopover == "lambda0":
 		lamb0 = o.lambin0[il];
 		ham = o.ham1 + wv*lamb0*o.Hbsm + wv*lamb0**2*o.sft;
+		#print('il, o.ld*lamb0 = ',il,o.ld,lamb0)
 		psi0 = createpsi0(o.ld*lamb0);
-		print('n*wv*lamb**2 = ',n*wv*(o.ld*lamb0)**2)
+		#print('n*wv*lamb**2 = ',n*wv*(o.ld*lamb0)**2)
 	else:
 		g = o.lambin0[il]/np.sqrt(o.n);
 		# print('il,o.lambin0[il], np.sqrt(o.n), g = ',il,o.lambin0[il],np.sqrt(o.n),g)
@@ -89,32 +91,15 @@ def gettd(il):
 		# if o.n==1: print(ham.toarray())
 	ham = ham.tocsr();
 
-	# psi0 =  Psi0fromPhotgs(ham); # use only if 
-			# issues with large factorial handling etc
-			#  are not resolved with decimal module
-	if 0:
-		# print(' handmade: Psi0 = --------------------')
-		# print(psi0)
-		nplt = 400
-		# print('hand: ',psi0[51:55])
-		# print('ind51: Nv,Pi =',o.Nv1l[51],o.Norm1l[51:55])
-		plt.plot(range(nplt),psi0[0:nplt],'sr',ms=10)
-		psi0 =  Psi0fromPhotgs(ham);
-		# print('calc: ',psi0[51:55])
-		print('Psi0gs = --------------------')
-		plt.plot(range(nplt),np.abs(psi0[0:nplt]),'og',ms=5)
-		plt.show()
-		_exit()
-
 	t0 = 0;
 	# start complex integrator:
-	r = ode(fInteg).set_integrator('zvode', method='bdf')
-	r.set_initial_value(psi0, t0);
+	r = ode(fInteg).set_integrator('zvode', method='bdf')#,order=2)	r.set_initial_value(psi0, t0);
 	# tlist = [0]; 
 	corr = [1];# correlation fun at t0
 	i = 1; # start from 1, t=0 already done!
 	while r.successful() and i < ntmax: # r.t < tfddd: #
 		tc = i*dt; # r.t+dt;# 
+		print('xx = ',o.xx)
 		psit = r.integrate(tc);
 		# get the correlation function:
 		corr.append(np.vdot(psi0,psit));
@@ -128,7 +113,51 @@ def gettd(il):
 	del r
 #--------------------------
 	return corr # , tlist
+
+
 #----------------------------------------------------------
+def gettdRK4(il):
+	# time evolves the state with only a photon present
+	# psi0 = |P(t=0)> = a^dag|0x,0p,0v> = [1,0,0,......,0];
+	#--------------------------		
+	dth = 0.5*dt;
+	def yprime(y):
+		if dkapa:
+			hdecay = np.concatenate((kappa*y[range(n1)],gamma*y[range(n1,ntot)]));
+		else:
+			hdecay = kappa*y	
+		Hpsi = -1j*ham.dot(y) - hdecay;
+		return Hpsi
+	#--------------------------
+	def RK4Step(y):
+		k1 = yprime(y         )
+		k2 = yprime(y + k1*dth)
+		k3 = yprime(y + k2*dth)
+		k4 = yprime(y + k3*dt )
+		return y + (k1+2*k2+2*k3+k4)*dt/6.
+ 	#--------------------------
+	# make full hamiltonian:
+	if loopover == "lambda0":
+		lamb0 = o.lambin0[il];
+		ham = o.ham1 + wv*lamb0*o.Hbsm + wv*lamb0**2*o.sft;
+		psi0 = createpsi0(o.ld*lamb0);
+	else:
+		g = o.lambin0[il]/np.sqrt(o.n);
+		ham = o.ham1 + g*o.Hgsm;
+		psi0 = createpsi0(o.ld*lambda0);
+	ham = ham.tocsr();
+	# integrate
+	t0 = 0; corr = [1]; i = 1; # start from 1, t=0 already done!
+	psit = psi0;
+	while i < ntmax:
+		tc = i*dt; 
+		psit = RK4Step(psit);
+		corr.append(np.vdot(psi0,psit));
+		i += 1;
+		corr = np.array(corr);
+	return corr
+#----------------------------
+
 # our spectrum has only nonzero peaks in a small reagion
 # FFT/IFFT not good because they spread the points on freq axis evenly and only a few ~ 50 points among ~10k lie within relevent region where we get absorption peaks, i.e., ~ 2.0 around wx.
 # So, I simply get the FT in the desired freq range with desired point density for a smooth spectrum. 
@@ -265,7 +294,7 @@ def Green(wlist,l0):
 # -------------------------------------------
 
 def fcorrft(il):
-	corr = gettd(il); # calculate correlation
+	corr = gettdRK4(il); # calculate correlation
 	E1, E2 = e1+wx, e2+wx;		
 	wlist = np.linspace(E1, E2,nwmax);
 	Gw = getFourierTransform(corr,0,dt,wlist,'F');
@@ -321,7 +350,7 @@ def createpsi0(lam0):
 	if len(o.psi0)>0:
 		return o.psi0	
 	# create:
-	if ld>0: # for displaced basis
+	if ld>0 and lam0 > 0: # for displaced basis
 		psi0 = np.zeros(ntot);
 		psi0p=[]; row=[]; col=[];
 		cont=decimal.Context(prec=15, Emax=999, clamp=1);
@@ -378,10 +407,6 @@ def corrft():
 	# indices for projectors: can we work with sparse?
 	# o.indPp = np.arange(0,n1); o.indPx = np.arange(n1,ntot);
 
-	# ------------------------------
-	# loop parameter: lambbda_0 or wr
-	lambin0 = np.linspace(lmin,lmax, nlmax);
-	o.lambin0 = lambin0;
 	# ------------------------------
 	# set o.ham1
 	if loopover == 'lambda0':
