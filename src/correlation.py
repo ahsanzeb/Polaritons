@@ -120,7 +120,7 @@ def gettdRK4(il):
 	# time evolves the state with only a photon present
 	# psi0 = |P(t=0)> = a^dag|0x,0p,0v> = [1,0,0,......,0];
 	#--------------------------		
-	dth = 0.5*dt;
+	dth = 0.5*dt; dt6 = dt/6;
 	def yprime(y):
 		if dkapa:
 			hdecay = np.concatenate((kappa*y[range(n1)],gamma*y[range(n1,ntot)]));
@@ -132,9 +132,12 @@ def gettdRK4(il):
 	def RK4Step(y):
 		k1 = yprime(y         )
 		k2 = yprime(y + k1*dth)
+		ks = k1+2*k2; k1=0; # defining ks saves 2 arrays, 3 instead of 5.
 		k3 = yprime(y + k2*dth)
+		ks += 2*k3; k2=0;
 		k4 = yprime(y + k3*dt )
-		return y + (k1+2*k2+2*k3+k4)*dt/6.
+		ks += k4; k3=0;k4=0;
+		return y+ks*dt6; #y + (k1+2*k2+2*k3+k4)*dt/6.
  	#--------------------------
 	# make full hamiltonian:
 	if loopover == "lambda0":
