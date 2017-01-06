@@ -29,7 +29,6 @@ else: dkapa = 0;
 
 e1,e2,dt,tf = 	o.e1, o.e2, o.dt, o.tf
 nwmax,ntmax =	o.nwmax, o.ntmax
-mg = o.mg
 show = 	o.show
 
 kl= kappa/2;
@@ -279,9 +278,12 @@ def fwriteFT(il,wlist, Gw, GR, fnametd, ntmax):
 # -------------------------------------------
 def getFrankCondonEtc(l0):
 	res=[]; 	efac=[];
-	for i in range(mg+1):
-		x = np.exp(-l0**2)*l0**(2*i)/factorial(i);
-		res.append(x)
+	for i in range(mx+1):
+		#x = np.exp(-l0**2)*l0**(2*i)/factorial(i);
+		n0 = decimal.Decimal.from_float(math.factorial(i));
+		fc0 = cont.power(l0,2*i);
+		x = np.exp(-l0**2)*float(fc0)/float(n0);
+		res.append(x);
 		efac.append(i*wv -wv*l0**2 -1j*gamma/2); # -wv*l0**2 polaron transform term not included in JK notes
 	return res,efac
 # ---------------------
@@ -294,7 +296,7 @@ def Green(wlist,l0):
 	GRlist = [];
 	for w in wlist:
 		SelfE = 0;
-		for i in range(mg+1):
+		for i in range(mx+1):
 			SelfE -= wr2*FC[i]/(w - efac[i]);
 		GR = 1/(w +1j*kappa/2 - delta + SelfE);
 		GRlist.append(GR);

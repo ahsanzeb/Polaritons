@@ -43,7 +43,6 @@ lmin = 0;
 lmax = 0;
 nlmax = 1;
 # loopover = 'lambda0';
-mg = 10;
 
 
 
@@ -330,7 +329,7 @@ if corrtd:
 	o.corrtd = corrtd;
 	o.gamma, o.kappa = gamma, kappa
 	o.e1, o.e2, o.dt, o.tf = e1,e2,dt,tf
-	o.nwmax = nwmax ; o.mg  = mg;
+	o.nwmax = nwmax ;
 	o.show = show
 	o.ntmax = int(tf/dt);
 
