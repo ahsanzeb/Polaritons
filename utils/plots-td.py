@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 # for labels: paramteres for the abs spectrum we want to plot.
 #****************************************
 # waterfall plot
-ei=-1.5; ef= 2.5; # energy window
+ei=-2; ef= 3; # energy window
 lcol = 'g'; # line colour
 fcol = 'c'; # fill colour exact
 lcol2 = 'k'
@@ -18,7 +18,7 @@ lzerocol = lcol2; # zero line color
 lw=1
 lw2 = 1;
 show=1;  # 
-pltGr = 0;  # plot green analytical?
+pltGr = 1;  # plot green analytical?
 
 fig = plt.figure(facecolor='w');
 ax = fig.add_subplot(111, axisbg='w');
@@ -29,7 +29,6 @@ lines = fin.readlines();
 ldat = len(lines);
 carryon=True;
 istart = 0; ignu=0; results = []; headers = []; maxvals = [];
-b=[];
 while carryon==True:
 	# read parameters:
 	line = lines[istart];
@@ -54,14 +53,12 @@ while carryon==True:
 		a.append( [ float (x) for x in line.split() ] );
 	ntot = len(a);
 	a=np.array(a);
+	#if ignu>0:
 	results.append(a);
 		# normalise all data by max peak value
 	maxval = np.amax(a[:,1:],axis=0);
 	# print("maxval = ",maxval);
 	maxvals.append(maxval);
-	if ignu < 10:
-		b.append(a[:,1]);
-
 #.............................
 	iy = ignu;
 	offset = -iy # (ny-iy)*5
@@ -87,14 +84,13 @@ maxval = np.amax(np.array(maxvals),axis=0);
 
 fname='data/n-all/abs-vs-t-dt-normalised.txt';
 i = 0;
-for a in results[10:]:
-	if 1:
-		a[:,1] = (a[:,1]-b[i])/maxval[0];
-		a[:,2] = a[:,2]/maxval[1];
-		a[:,3] = a[:,3]/maxval[2];
+for a in results:
+	a[:,1] = a[:,1]/maxval[0];
+	a[:,2] = a[:,2]/maxval[1];
+	a[:,3] = a[:,3]/maxval[2];
 	header = headers[i];
 	f=open(fname,'ab');
-	np.savetxt(f, a,fmt='%15.10f %15.10f %15.10f %15.10f', delimiter=' ',header=header,comments=' ')
+	np.savetxt(f, a,fmt='%15.10f%15.10f%15.10f%15.10f', delimiter=' ',header=header,comments=' ')
 	f.close();
 	f=open(fname,'at')
 	print('    ',file=f)
@@ -102,13 +98,12 @@ for a in results[10:]:
 	f.close();
 	# waterfall plot ,comments='#'
 	iy = i
-	print('i == 1 ************')
 	if show:
-		offset = -iy*1 # (ny-iy)*5
+		offset = -iy # (ny-iy)*5
 		w = a[:,0];
 		ax.plot(w,a[:,1]+offset, lcol, lw=1, zorder=(iy+1)*2);
 		ax.fill_between(w, a[:,1]+offset, offset, facecolor=fcol, lw=0, zorder=(iy+1)*2-1);
-		if pltGr:
+		if pltGr and i==len(results)-1:
 			ax.plot(a[:,0],a[:,3]+offset, lcol2, lw=lw2, zorder=(iy+1)*2);
 			ax.plot(xline,yline+offset, lcol, lw=1);
 	i += 1;
@@ -116,7 +111,7 @@ for a in results[10:]:
 if show:
 	ttl = "${HTC\,Model:\,\,N= "+str(n)+"\,\kappa= "+str(kappa)+"\,\gamma= "+str(gamma)+"}$";
 	plt.xlim(ei,ef);
-	plt.ylim(-1*ignu-0,1);
+	plt.ylim(-ignu-0.2,1.2);
 	plt.xlabel("$\omega-\omega_0$",color='k',fontsize=24);
 	plt.ylabel("$\Im G^R$",color='k',fontsize=24);
 	plt.title(ttl,color='k',fontsize=16);

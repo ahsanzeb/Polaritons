@@ -278,12 +278,18 @@ def fwriteFT(il,wlist, Gw, GR, fnametd, ntmax):
 # -------------------------------------------
 def getFrankCondonEtc(l0):
 	res=[]; 	efac=[];
+	if abs(l0) < 1e-8:
+		for i in range(mx+1):
+			res.append(0);
+			efac.append(i*wv -1j*gamma/2); # -wv*l0**2 polaron transform term not 
+		return res,efac
 	cont=decimal.Context(prec=15, Emax=999, clamp=1);
+	decl0 = decimal.Decimal.from_float(l0);
 	for i in range(mx+1):
 		#x = np.exp(-l0**2)*l0**(2*i)/factorial(i);
 		n0 = decimal.Decimal.from_float(factorial(i));
-		fc0 = cont.power(l0,2*i);
-		x = np.exp(-l0**2)*float(fc0)/float(n0);
+		fc0 = cont.power(decl0,2*i);
+		x = np.exp(-l0**2)*float(fc0/n0);
 		res.append(x);
 		efac.append(i*wv -wv*l0**2 -1j*gamma/2); # -wv*l0**2 polaron transform term not included in JK notes
 	return res,efac
