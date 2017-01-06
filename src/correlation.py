@@ -140,10 +140,14 @@ def gettdRK4(il):
 	if loopover == "lambda0":
 		lamb0 = o.lambin0[il];
 		ham = o.ham1 + wv*lamb0*o.Hbsm + wv*lamb0**2*o.sft;
+		if nlmax ==1:
+			o.Hbsm = []; o.sft=[];
 		psi0 = createpsi0(o.ld*lamb0);
 	else:
 		g = o.lambin0[il]/np.sqrt(o.n);
 		ham = o.ham1 + g*o.Hgsm;
+		if nlmax ==1:
+			o.Hgsm = [];
 		psi0 = createpsi0(o.ld*lambda0);
 	ham = ham.tocsr();
 	# integrate
@@ -154,7 +158,7 @@ def gettdRK4(il):
 		psit = RK4Step(psit);
 		corr.append(np.vdot(psi0,psit));
 		i += 1;
-		corr = np.array(corr);
+	corr = np.array(corr);
 	return corr
 #----------------------------
 
