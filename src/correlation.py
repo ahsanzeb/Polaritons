@@ -242,7 +242,7 @@ def getFrankCondonEtc(l0):
 			if i==0: x=1;
 			else: x=0;
 			res.append(x);
-			efac.append(i*wv -1j*gamma/2);
+			efac.append(i*wv + wx -1j*gamma/2);
 		return res,efac
 	cont=decimal.Context(prec=15, Emax=999, clamp=1);
 	decl0 = decimal.Decimal.from_float(l0);
