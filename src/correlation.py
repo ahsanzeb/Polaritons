@@ -252,21 +252,21 @@ def getFrankCondonEtc(l0):
 		fc0 = cont.power(decl0,2*i);
 		x = np.exp(-l0**2)*float(fc0/n0);
 		res.append(x);
-		efac.append(i*wv -wv*l0**2 -1j*gamma/2); # -wv*l0**2 polaron transform term not included in JK notes
+		efac.append(i*wv + wx - wv*l0**2 -1j*gamma/2); # -wv*l0**2 polaron transform term not included in JK notes
 	return res,efac
-# ---------------------
+# -------------------------------------------
 def Green(wlist,l0,wr):
 	# ------------------
 	# getFrankCondonEtc()
 	FC, efac = getFrankCondonEtc(l0);# Frank-Condon factors etc
 	# ------------------
-	wr2 = wr*wr; delta = wc-wx;
+	wr2 = wr*wr;
 	GRlist = [];
 	for w in wlist:
 		SelfE = 0;
 		for i in range(mx+1):
 			SelfE -= wr2*FC[i]/(w - efac[i]);
-		GR = 1/(w +1j*kappa/2 - delta + SelfE);
+		GR = 1/(w - wc + 1j*kappa/2 + SelfE);
 		GRlist.append(GR);
 	GRlist = np.array(GRlist);
 	ftnorm = 1/np.sqrt(2*pi);
@@ -287,6 +287,7 @@ def fcorrft(il):
 		lamb0 = lambda0;
 		wr = o.lambin0[il];
 	GR = Green(wlist-wx,lamb0,wr); 	# analytical Green function
+	#GR = Green(wlist,lamb0,wr); 	# analytical Green function
 	return Gw, GR, corr
 # -------------------------------------------
 # create psi0: important case is when ld>0, coherent state for every site
