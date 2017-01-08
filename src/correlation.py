@@ -286,8 +286,7 @@ def fcorrft(il):
 	else:
 		lamb0 = lambda0;
 		wr = o.lambin0[il];
-	GR = Green(wlist-wx,lamb0,wr); 	# analytical Green function
-	#GR = Green(wlist,lamb0,wr); 	# analytical Green function
+	GR = Green(wlist,lamb0,wr); 	# analytical Green function
 	return Gw, GR, corr
 # -------------------------------------------
 # create psi0: important case is when ld>0, coherent state for every site
