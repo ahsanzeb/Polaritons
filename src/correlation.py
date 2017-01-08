@@ -10,8 +10,6 @@ import matplotlib.pyplot as plt
 from multiprocessing import Pool
 import decimal
 
-from scipy.sparse.linalg import lobpcg
-
 
 # define local to avoid writing o. every time!
 # at risk of setting these at the time of first import of this module only.
@@ -257,7 +255,7 @@ def getFrankCondonEtc(l0):
 		efac.append(i*wv -wv*l0**2 -1j*gamma/2); # -wv*l0**2 polaron transform term not included in JK notes
 	return res,efac
 # ---------------------
-def Green(wlist,l0):
+def Green(wlist,l0,wr):
 	# ------------------
 	# getFrankCondonEtc()
 	FC, efac = getFrankCondonEtc(l0);# Frank-Condon factors etc
@@ -271,7 +269,8 @@ def Green(wlist,l0):
 		GR = 1/(w +1j*kappa/2 - delta + SelfE);
 		GRlist.append(GR);
 	GRlist = np.array(GRlist);
-	return GRlist
+	ftnorm = 1/np.sqrt(2*pi);
+	return GRlist*ftnorm
 # -------------------------------------------
 def fcorrft(il):
 	corr = gettdRK4(il); # calculate correlation
@@ -281,9 +280,13 @@ def fcorrft(il):
 	Gw = getFourierTransform(corr,0,dt,wlist,'F');
 	# green function based results:
 	# wlist = wlist - wx ; # shift freq axis
-	if loopover =="lambda0": lamb0 = o.lambin0[il];
-	else: lamb0 = lambda0;
-	GR = Green(wlist-wx,lamb0); 	# analytical Green function
+	if loopover =="lambda0":
+		lamb0 = o.lambin0[il];
+		wr = o.wr;
+	else:
+		lamb0 = lambda0;
+		wr = o.lambin0[il];
+	GR = Green(wlist-wx,lamb0,wr); 	# analytical Green function
 	return Gw, GR, corr
 # -------------------------------------------
 # create psi0: important case is when ld>0, coherent state for every site
@@ -379,10 +382,9 @@ def corrft():
 	print(" nwft = ",nwmax);
 	# ------------------------------
 	il = 0;
-	print(' GR ===> GR/2.5 for comparison with exact. ???!!! :o')
 	for Gw, GR, corr in results:
 		# 1/2.5 makes GR peaks equal to the exact for lam=0 case.
-		fwriteFT(il, wlist, Gw, GR/2.5, dumy+'/abs-vs-w-td.txt', ntmax); # write FT file
+		fwriteFT(il, wlist, Gw, GR, dumy+'/abs-vs-w-td.txt', ntmax); # write FT file
 		fwriteCorr(il, tlist, corr, dumy+'/corr-vs-t-td.txt');# write Correlation file
 		il += 1;
 	return
