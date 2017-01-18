@@ -5,16 +5,19 @@ import numpy as np;
 from math import factorial
 from scipy.integrate import ode
 from numpy import pi, exp
-from scipy.sparse import coo_matrix, diags
+from scipy.sparse import coo_matrix
+from scipy import linalg
 import matplotlib.pyplot as plt
 from multiprocessing import Pool
 import decimal
 
+from memtime import memtime
 
 # define local to avoid writing o. every time!
 # at risk of setting these at the time of first import of this module only.
 ##### any update in the values of these variables will not be considered by the functions of this module, because they use the first-import-time's set values.
 ########### consider this if loops over lambda/wr/n for absorption calculations is tried.
+usenumpy = o.usenumpy;
 n,m,mx,Np = o.n, o.m, o.mx,o.Np
 wr,wx,wc,wv = o.wr, o.wx, o.wc, o.wv
 dumy = o.dumy;
@@ -22,7 +25,7 @@ n1,n2,ntot = o.n1,o.n2,o.ntot;
 n1fsym = o.n1fsym;
 ld = o.ld;
 tolr, itermax = o.tolr, o.itermax 
-
+printstep = o.printstep;
 
 gamma, kappa =	 o.gamma, o.kappa
 if abs(gamma-kappa) > 1e-5: dkapa = 1;
@@ -150,6 +153,8 @@ def gettdRK4(il):
 	t0 = 0; corr = [1]; i = 1; # start from 1, t=0 already done!
 	psit = psi0;
 	while i < ntmax:
+		if i%printstep == 0:
+			print(' time evolution step = '+str(i)+'/'+str(ntmax))
 		tc = i*dt; 
 		psit = RK4Step(psit);
 		corr.append(np.vdot(psi0,psit));
@@ -157,6 +162,49 @@ def gettdRK4(il):
 	corr = np.array(corr);
 	return corr
 #----------------------------
+
+
+
+def gettdfort(il):
+	import tcorr # fortran routine
+	# time evolves the state with only a photon present
+	# psi0 = |P(t=0)> = a^dag|0x,0p,0v> = [1,0,0,......,0];
+	#--------------------------		
+	dth = 0.5*dt; dt6 = dt/6;
+	print('dth,dt6 = ',dth,dt6)
+	kappa2 = kappa/2.0; gamma2 = gamma/2.0;
+ 	#--------------------------
+	# make full hamiltonian:
+	if loopover == "lambda0":
+		lamb0 = o.lambin0[il];
+		ham = o.ham1 + wv*lamb0*o.Hbsm + wv*lamb0**2*o.sft;
+		#print('o.sft.data = ',o.sft.data)
+		if nlmax ==1:
+			o.Hbsm = []; o.sft=[];
+		psi0 = createpsi0(o.ld*lamb0);
+	else:
+		g = o.lambin0[il]/np.sqrt(o.n);
+		ham = o.ham1 + g*o.Hgsm;
+		if nlmax ==1:
+			o.Hgsm = [];
+		psi0 = createpsi0(o.ld*lambda0);
+	ham = ham.tocsr();
+	# create arguments for fortran routine
+	Val=ham.data;# CSR format data array of the matrix
+	Col=ham.indices;# CSR format index array of the matrix
+	RowPtr=ham.indptr;# CSR format index pointer array of the matrix
+	nnz, = Val.shape
+	nrp, = RowPtr.shape	
+	# shift index for fortran:
+	Col += 1; RowPtr += 1;
+	# integrate
+	corr = tcorr.tcorr(n1,ntot,nnz,nrp,printstep,Val,Col,RowPtr, psi0,dt,ntmax,kappa2,gamma2)
+	return corr
+#----------------------------
+
+
+
+
 
 # our spectrum has only nonzero peaks in a small reagion
 # FFT/IFFT not good because they spread the points on freq axis evenly and only a few ~ 50 points among ~10k lie within relevent region where we get absorption peaks, i.e., ~ 2.0 around wx.
@@ -232,11 +280,39 @@ def fwriteFT(il,wlist, Gw, GR, fnametd, ntmax):
 	print('    ',file=f)
 	f.close()		
 	return None
+
+def fwriteFT2(il,wlist, Gw, GR, GR2, fnametd, ntmax):
+	# save FT of correlation
+	absOUT = np.zeros((nwmax,4));
+	absOUT[:,0] = wlist;
+	absOUT[:,1] = np.real(Gw);
+	# 2*kl*np.imag(absws)**2 + kappa*np.abs(absws)**2;
+	#absOUT[:,2] = 2*kl*np.real(Gw)**2 + kappa*np.abs(Gw)**2;
+	absOUT[:,2] = -np.imag(GR2);# truncated then transformed
+	absOUT[:,3] = -np.imag(GR); # Green from analytical (transformed then trucated)
+	f=open(fnametd,'ab');
+	if loopover =="lambda0":
+		lamb0 = o.lambin0[il];
+		wr0 = wr;
+	else:
+		wr0 = o.lambin0[il];
+		lamb0 = lambda0;
+	header =" "+str(n)+" "+str(m)+" "+str(mx)+" "+str(nwmax)+" "+str(ntmax);
+	header += " "+str(wr0)+" "+str(lamb0)+" "+str(wc)+" "+str(wx)+" "+str(wv);
+	header += " "+str(gamma)+ " "+str(kappa)+ " "+str(tf)+ " "+str(dt);
+	np.savetxt(f, absOUT,fmt='%15.10f %15.10f %15.10f %15.10f', delimiter=' ', header=header,comments='#')
+	f.close();
+	f=open(fnametd,'at')
+	print('    ',file=f)
+	print('    ',file=f)
+	f.close()		
+	return None
+
 #--------------------------------------------
 # Analytical green function from JK notes
 # -------------------------------------------
 def getFrankCondonEtc(l0):
-	res=[]; 	efac=[];
+	res=[]; 	efac=[]; #mx = 2*o.mx
 	if abs(l0) < 1e-8:
 		for i in range(mx+1):
 			if i==0: x=1;
@@ -256,10 +332,13 @@ def getFrankCondonEtc(l0):
 	return res,efac
 # -------------------------------------------
 def Green(wlist,l0,wr):
+	#mx = 2*o.mx
 	# ------------------
 	# getFrankCondonEtc()
 	FC, efac = getFrankCondonEtc(l0);# Frank-Condon factors etc
 	# ------------------
+	#print(wr,wx,wc,wv,l0)
+
 	wr2 = wr*wr;
 	GRlist = [];
 	for w in wlist:
@@ -273,7 +352,14 @@ def Green(wlist,l0,wr):
 	return GRlist*ftnorm
 # -------------------------------------------
 def fcorrft(il):
-	corr = gettdRK4(il); # calculate correlation
+	# calculate correlation
+	memtime('corr');
+	if usenumpy:
+		corr = gettdRK4(il); # numpy
+		memtime('end-numpy');
+	else:
+		corr = gettdfort(il);# fortran
+		memtime('end-fort');
 	E1, E2 = e1+wx, e2+wx;	
 	#print('using: e1,e2 = ',e1,e2)
 	wlist = np.linspace(E1, E2,nwmax);
@@ -287,7 +373,9 @@ def fcorrft(il):
 		lamb0 = lambda0;
 		wr = o.lambin0[il];
 	GR = Green(wlist,lamb0,wr); 	# analytical Green function
-	return Gw, GR, corr
+	GR2 = Green2(wlist,lamb0,wr); 	# analytical Green function
+
+	return Gw, GR, GR2, corr
 # -------------------------------------------
 # create psi0: important case is when ld>0, coherent state for every site
 def createpsi0(lam0):
@@ -382,16 +470,45 @@ def corrft():
 	print(" nwft = ",nwmax);
 	# ------------------------------
 	il = 0;
-	for Gw, GR, corr in results:
+	for Gw, GR, GR2, corr in results:
 		# 1/2.5 makes GR peaks equal to the exact for lam=0 case.
-		fwriteFT(il, wlist, Gw, GR, dumy+'/abs-vs-w-td.txt', ntmax); # write FT file
+		fwriteFT2(il, wlist, Gw, GR, GR2, dumy+'/abs-vs-w-td.txt', ntmax); # write FT file
 		fwriteCorr(il, tlist, corr, dumy+'/corr-vs-t-td.txt');# write Correlation file
 		il += 1;
 	return
 #------------------------------------------------------
 
+def Green2(wlist,l0,wr):
+	#mx = 2*o.mx
+	h = np.zeros((mx+1,mx+1));
+	for i in range(mx+1):
+		h[i,i] = i;	
+	for i in range(mx):
+		h[i,i+1] = np.sqrt(i+1)*l0;
+	for i in range(1,mx+1):
+		h[i,i-1] = np.sqrt(i)*l0;
 
+	es,evs = linalg.eig(h); del h;
+	#print(evs)
+	#print('-----')
+	evs2 = evs[0,:]**2;
+	#print(evs2)
+	
+	#print(linalg.norm(evs,axis=0))
 
+	#print(wr,wx,wc,wv,l0)
+	wr2 = wr*wr;
+	wxc = wx - 1j*gamma/2; wcc = wc - 1j*kappa/2;
+	GRlist = [];
+	for w in wlist:
+		SelfE = 0;
+		for i in range(mx+1):
+			SelfE -= wr2*evs2[i]/(w - wxc - wv*es[i]);
+		GR = 1/(w - wcc + SelfE);
+		GRlist.append(GR);
+	GRlist = np.array(GRlist);
+	ftnorm = 1/np.sqrt(2*pi);
+	return GRlist*ftnorm
 
 
 

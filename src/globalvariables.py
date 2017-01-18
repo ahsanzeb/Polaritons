@@ -9,12 +9,13 @@ show = 0; corrtd= 0; matelem = 0;
 groundstate = 0; justenergy = 0;
 
 diffoutdir = 0;
-
+usenumpy = 0;
 gamma=0; kappa=0;
 e1=0; e2=0;
 dt=0;
 tf=0;
 nwmax = 0; ntmax = 0;
+printstep = 0;
 nstates=0;
 
 lamb0=0;
@@ -28,6 +29,9 @@ lambda0=0;
 lamlist=[];
 lambin0 = [];
 uselamlist = 0;
+
+wclist = [];
+wvlist = [];
 
 itermax = 0;
 tolr=0;

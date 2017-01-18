@@ -33,13 +33,25 @@ diffoutdir = o.diffoutdir;
 old = o.ld; # to reset ld value for n!=1
 lamlist = o.lamlist;
 uselamlist = o.uselamlist;
+wclist=o.wclist;
+wvlist=o.wvlist;
 # -------------------------------------------------------
 niter=0; lnlist = len(nlist);
-for n in nlist:
+for nn in nlist:
+	n = int(nn);
 	o.n = n;
 	m, mx = mlist[niter];
 	o.m, o.mx = m, mx;
-	if uselamlist: o.lambin0 = [lamlist[niter]]; # to cheat
+
+	if uselamlist:
+		o.lambin0 = [lamlist[niter]]; # to cheat
+		print(' lam = ',o.lambin0)
+
+	if len(wclist)==len(nlist):
+		o.wc = wclist[niter]; print(' wc = ',o.wc)
+	if len(wvlist)==len(nlist):
+		o.wv = wvlist[niter]; print(' wv = ',o.wv)
+
 	# -------------------------
 	# print iter message
 	prntmsg(n,m,mx,niter,lnlist); 

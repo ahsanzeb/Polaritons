@@ -43,10 +43,21 @@ lmin = 0;
 lmax = 0;
 nlmax = 1;
 # loopover = 'lambda0';
+wclist = [];
+wvlist = [];
 
+if hasattr(param, 'wclist'):
+	if hasattr(param, 'nlist'):
+		if len(param.wclist)==len(param.nlist):
+			wclist = param.wclist
+			print(' vs wc (detuning): wclist will be used... ')
+if hasattr(param, 'wvlist'):
+	if hasattr(param, 'nlist'):
+		if len(param.wvlist)==len(param.nlist):
+			wvlist = param.wvlist
+			print(' vs wv: wvlist will be used... ')
 
-
-
+	
 if hasattr(param, 'absorption'):
 	absorption = param.absorption
 	if (absorption=='true'):
@@ -132,6 +143,19 @@ if hasattr(param, 'absorption'):
 else:
 	absorption=None
 # .............................................
+
+printstep = 25;
+if hasattr(param, 'printstep'):
+	printstep = param.printstep
+
+usenumpy = 0;
+if hasattr(param, 'usenumpy'):
+	usenumpy = param.usenumpy
+	if usenumpy != 0 and usenumpy !=1:
+		print(' set usenumpy=0/1 for numpy/fortran for time evolution')
+		exit()
+o.usenumpy = usenumpy;
+
 
 #------------------------------------- 
 if hasattr(param, 'onlyenergy'):
@@ -312,6 +336,9 @@ o.nlist, o.mlist = nlist, mlist;
 # o.n, o.m, o.mx, o.Np =n,m,mx,Np;
 o.Np = Np;
 
+o.wclist = wclist;
+o.wvlist = wvlist;
+
 o.wr, o.wx, o.wc, o.wv=wr,wx,wc,wv
 o.ld=ld
 o.nstates = nstates
@@ -332,7 +359,8 @@ if corrtd:
 	o.nwmax = nwmax ;
 	o.show = show
 	o.ntmax = int(tf/dt);
-
+	o.printstep = printstep;
+	
 if matelem or groundstate:
 	o.itermax,  o.tolr=itermax, tolr
 	o.detuning, o.eshft = detuning, eshft
