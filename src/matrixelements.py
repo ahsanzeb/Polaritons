@@ -40,6 +40,28 @@ def phot_fraction(i):
 	return cos2th
 #--------------------------
 
+# Herrera & Spano Absorption:
+# Dipole matrix elements between eigenstates of HTC model in 1 excitation space (the one we calculate in the code).
+def EiEjmatelem(i):
+		matelem = np.zeros((nstates));
+		eveci = o.evecs[n1:ntot,i]; # i-th eigenstate's exciton part
+		for jj in range(n2):
+			for mj in range(0,m+1):
+				# n1+ mj*n2 + jj translated by -n1; exciton block basis index
+				j= mj*n2 + jj; 
+				ii = o.map21[jj,mj]; # photon block basis index
+				matelem += o.evecs[ii,:]*eveci[j];
+			# extra basis: diag in mj,jj
+			for mj in range(m+1,mx+1): 
+				# coor in exciton block
+				j = mj*n2 + jj;
+				# coor in photon block
+				ii = n1fsym +(mj-m-1)*n2 + jj;
+				matelem += o.evecs[ii,:]*eveci[j];
+		return np.sum(np.abs(matelem)**2)
+#--------------------------
+
+
 # absoprtion option 2: get eigenstates and find matrix elements
 # 	calc eigpairs in 1 excitation subspace and
 # 	photon absorption matrix elements from 0 excitation subspace
@@ -102,29 +124,27 @@ def fmatelem():
 
 		# get shifted evalues
 		if detuning==1:
-			#print("wx = ",wx)
 			evalues = evalues - wx; # shift all E_m by E_x:
 		else:
-			#print("wx = ",eshft)
 			evalues = evalues - eshft; # shift all E_m by E_x:	
-		if nlmax ==1: 
-			cos2th = [];
-			for i in range(nstates):
-				cos2th.append(getCos2th(i));
-		else:
-			pool=Pool(Np); # refresh pool
-			# photon fraction:
-			cos2th = pool.map(getCos2th, range(nstates));
-			pool.close(); # close this pool
-		# coeff of eigenstates in photon and exciton sectors with 0 phonon: basis indeces = 0,n1
-		# Aphot = o.evecs[0,:]; # all eigenstates, columns
-		# Aexc = o.evecs[n1,:];
+		cos2th = [];
+
+		for i in range(nstates):
+			cos2th.append(getCos2th(i));
+
+
+		# Herrera and Spano absorption
+		#if 1: # define logical to control this and set here.
+		#	pool=Pool(Np);
+		#	hsmelem = pool.map(EiEjmatelem, range(nstates));
+		#	pool.close();
+
 		# combine the results for writing output file:
 		absOUT = np.zeros((nstates,4));
 		#print("o.Nv1l[0],o.Nv2l[0] = ",o.Nv1l[0],o.Nv2l[0])
 		absOUT[:,0] = evalues;
-		absOUT[:,1] = o.evecs[0,:];
-		absOUT[:,2] = o.evecs[n1,:];
+		absOUT[:,1] = np.abs(o.evecs[0,:])**2;
+		absOUT[:,2] = o.evecs[n1,:]; #hsmelem #
 		absOUT[:,3] = cos2th;
 	
 		fabsorption = dumy+"/absorption.txt"
@@ -147,6 +167,8 @@ def fmatelem():
 		print('    ',file=f)
 		print('    ',file=f)
 		f.close()		
+
+
 
 	print(" absorption data calculated for postprocessing!");
 	return
