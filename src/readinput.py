@@ -98,10 +98,12 @@ if hasattr(param, 'absorption'):
 					print(" tf not set: default = 100 will be used...");
 					print("    ==> ntmax ~ tf/dt = ", int(tf/dt) );
 				# --------------------------
-				tdecay = 25/(kappa+gamma); # time corr decay to ~ 0
+				tdecay = 30/(kappa+gamma); # time corr decay to ~ 0
 				if tf > tdecay:
-					tf = tdecay;
-					print(" tf > tdecay: setting tf = tdecay = 10/(kappa+gamma) = ",tdecay);
+					#tf = tdecay;
+					#print(" tf > 30/(kappa+gamma): setting tf = 30/(kappa+gamma) = ",tdecay);
+					print(" tf > 30/(kappa+gamma):  tf, 1/(kappa+gamma)= ",tf,1/(kappa+gamma));
+					print(" tf ~ 30/(kappa+gamma) should be ok ... ");
 				if tf/dt > 10000:
 					print(" to avoid ntmax > 10000: set tf/dt to default 100, 0.01 ...")
 					if dt >= 0.01:

@@ -1,4 +1,5 @@
-
+# kappa, gamma multiplication
+#when getting Gamma, use appropriate weights, Nv1l
 
 import globalvariables as o
 import numpy as np;
@@ -116,9 +117,11 @@ def gettdRK4(il):
 	#--------------------------		
 	dth = 0.5*dt; dt6 = dt/6;
 	kappa2 = kappa/2.0; gamma2 = gamma/2.0;
+	k2nrm = kappa2*n1/ntot;
+	g2nrm = gamma2*(1-n1/ntot);
 	def yprime(y):
 		if dkapa:
-			hdecay = np.concatenate((kappa2*y[range(n1)],gamma2*y[range(n1,ntot)]));
+			hdecay = np.concatenate((k2nrm*y[range(n1)],g2nrm*y[range(n1,ntot)]));
 		else:
 			hdecay = kappa2*y;
 		Hpsi = -1j*ham.dot(y) - hdecay;
@@ -170,8 +173,7 @@ def gettdfort(il):
 	# time evolves the state with only a photon present
 	# psi0 = |P(t=0)> = a^dag|0x,0p,0v> = [1,0,0,......,0];
 	#--------------------------		
-	dth = 0.5*dt; dt6 = dt/6;
-	print('dth,dt6 = ',dth,dt6)
+	#dth = dt/2; dt6 = dt/6;
 	kappa2 = kappa/2.0; gamma2 = gamma/2.0;
  	#--------------------------
 	# make full hamiltonian:

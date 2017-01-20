@@ -25,15 +25,16 @@ Cf2py intent(out) corr
 Cf2py depend(ntmax) corr
 
       ! aux
-      double complex, dimension(ntot) :: psit,k1,k2,k3
+      double complex, dimension(ntot) :: psit,k1,k2,k3,v
       integer :: i
       logical :: dkappa
-      double precision :: dth,dt6
+      double precision :: dth,dt6,kapa2nrm,gama2nrm
       double complex :: iotam
       dth = dt/2.0d0;
       dt6 = dt/6.0d0;
       iotam = (0.0d0,-1.0d0);
-
+      kapa2nrm = kappa2*n1/ntot;
+      gama2nrm = gamma2*(1-n1/ntot);
       write(6,*)'nnz, ntot = ',nnz,ntot
       dkappa = .false.
       if (abs(kappa2-gamma2) > 1e-6) dkappa = .true.
@@ -54,18 +55,19 @@ Cf2py depend(ntmax) corr
       implicit none
       double complex, intent(in) :: vin(ntot)
       double complex, intent(out) :: vout(ntot)
-      integer :: i,j	
+      integer :: i,j	,nn
       vout = 0.0d0
-
+      !write(6,*)"n1 = ",n1
       do i=1,nrp-1
        do j=RowPtr(i),RowPtr(i+1)-1
         vout(i) = vout(i) + Val(j)*vin(Col(j));
        end do
       end do
-      if (dkappa .eqv. .true.) then
-       k1(1:n1) = kappa2*vin(1:n1);
-       k1(n1+1:ntot) = gamma2*vin(n1+1:ntot);
-       vout = vout*iotam - k1
+      if (dkappa) then     	
+       v(1:n1) = kapa2nrm*vin(1:n1);
+       v(n1+1:ntot) = gama2nrm*vin(n1+1:ntot);
+       !write(6,*)"size(k1) = ",size(k1)
+       vout = vout*iotam - v
       else
        vout = vout*iotam - kappa2*vin
       endif

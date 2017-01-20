@@ -8,14 +8,9 @@ import math
 # Input:
 # ---------------------# ---------------------
 # decay rates for cavity and excitons:
-kr= 0.05;
-gamma = 0.05;
+kr= 0.1;
+gamma = 0.1;
 kl = kr; 
-
-# bare excitonic dipole transition matrix elemet
-alpha = 0.0; # depends on probe beam intensity, I think!
-# I think, should be less than a few % of rabi frequency.
-# should not it be much bigger than gamma, because that gamma is due to coupling of atom with just free space radiation modes but this alpha is due to coupling with resonant probe beam?!
 
 kappa = 0.5*(kr+kl);
 
@@ -63,17 +58,17 @@ def frange(x, y, dx):
 def denom(i):
 	cos2th = a[i,3]; # photon fraction
 	gm = (kr+kl)*cos2th + gamma*(1-cos2th);
-	return a[i,0] + 1j*gm*0.5;
+	return a[i,0] + 1j*gm*0.5; #, 0.25*gm**2
 # ---------------------
 def absw(w):
 	res = 0.0;
 	for i in range(ntot):
-		res += abs((a[i,1] + alpha*a[i,2]))**2/(w - EGamma[i]);
+		res += a[i,1]/(w - EGamma[i]);
 	return res
 # ---------------------
 def getFrankCondonEtc():
 	res=[]; 	efac=[];
-	for i in range(5*mx+1):
+	for i in range(mx+1):
 		x = np.exp(-l0**2)*l0**(2*i)/math.factorial(i);
 		res.append(x)
 		efac.append(i*wv -wv*l0**2 -1j*gamma/2); # -wv*l0**2 polaron transform term not included in JK notes
@@ -81,10 +76,16 @@ def getFrankCondonEtc():
 # ---------------------
 def Green(w):
 	SelfE = 0;
-	for i in range(5*mx+1):
+	for i in range(mx+1):
 		SelfE -= wr2*FC[i]/(w - efac[i]);
 	GR = 1/(w +1j*kappa/2 - delta + SelfE);
 	return GR
+# ---------------------
+def HSabsw(w):
+	res = 0.0;
+	for i in range(ntot):
+		res += a[i,1]*a[i,2] /( (w - a[i,0])**2 + Gammas[i]);
+	return res
 # ---------------------
 
 
@@ -160,16 +161,19 @@ while carryon==True:
 	pool=Pool(Np)
 	# "absorption" for all frequencies:
 	absws = pool.map(absw,w); # Green from Numerics
+	#HSabsws = pool.map(HSabsw,w);# Herrera & Spano Absorption
 	# -------------------------------
 	GR = pool.map(Green,w);
 	# -------------------------------
 	# ---- write output file -----
 	# E, ImG, A(w), ImGa
-	result = np.zeros((nw,4));
+	result = np.zeros((nw,4));#np.zeros((nw,5));
 	result[:,0] = w;
 	result[:,1] = np.imag(absws);
 	result[:,2] = 2*kl*np.imag(absws)**2 + kappa*np.abs(absws)**2;
 	result[:,3] = -np.imag(GR); # Green from analytical
+	#result[:,4] = HSabsws; # Herrera & Spano Absorption
+
 	# normalise all data by max peak value
 	maxval = np.amax(result[:,1:],axis=0);
 	# print("maxval = ",maxval);
