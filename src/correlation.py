@@ -117,11 +117,9 @@ def gettdRK4(il):
 	#--------------------------		
 	dth = 0.5*dt; dt6 = dt/6;
 	kappa2 = kappa/2.0; gamma2 = gamma/2.0;
-	k2nrm = kappa2*n1/ntot;
-	g2nrm = gamma2*(1-n1/ntot);
 	def yprime(y):
 		if dkapa:
-			hdecay = np.concatenate((k2nrm*y[range(n1)],g2nrm*y[range(n1,ntot)]));
+			hdecay = np.concatenate((kappa2*y[range(n1)],gamma2*y[range(n1,ntot)]));
 		else:
 			hdecay = kappa2*y;
 		Hpsi = -1j*ham.dot(y) - hdecay;

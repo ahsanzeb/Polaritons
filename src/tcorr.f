@@ -28,13 +28,11 @@ Cf2py depend(ntmax) corr
       double complex, dimension(ntot) :: psit,k1,k2,k3,v
       integer :: i
       logical :: dkappa
-      double precision :: dth,dt6,kapa2nrm,gama2nrm
+      double precision :: dth,dt6
       double complex :: iotam
       dth = dt/2.0d0;
       dt6 = dt/6.0d0;
       iotam = (0.0d0,-1.0d0);
-      kapa2nrm = kappa2*n1/ntot;
-      gama2nrm = gamma2*(1-n1/ntot);
       write(6,*)'nnz, ntot = ',nnz,ntot
       dkappa = .false.
       if (abs(kappa2-gamma2) > 1e-6) dkappa = .true.
@@ -64,8 +62,8 @@ Cf2py depend(ntmax) corr
        end do
       end do
       if (dkappa) then     	
-       v(1:n1) = kapa2nrm*vin(1:n1);
-       v(n1+1:ntot) = gama2nrm*vin(n1+1:ntot);
+       v(1:n1) = kappa2*vin(1:n1);
+       v(n1+1:ntot) = gamma2*vin(n1+1:ntot);
        !write(6,*)"size(k1) = ",size(k1)
        vout = vout*iotam - v
       else
