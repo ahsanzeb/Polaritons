@@ -51,7 +51,7 @@ mem0 = 0;
 #----------------------------------
 # set/calculated in functions.countbasis()
 n1fsym,n1,n2,n3,ntot=0,0,0,0,0;
-listn2 = []; listn3 = [];
+listn1fsym=[];listn2 = []; listn3 = [];
 #----------------------------------
 
 #----------------------------------

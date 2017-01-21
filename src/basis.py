@@ -147,6 +147,7 @@ def fbasis(n,m,mx,Np):
 	# sets global variables: listn2 [,listn3]
 	# mkpoollists(); 
 	# -------------------------------------------------------
+	o.listn1fsym = mkchunks(Np,n1fsym);
 	o.listn2 = mkchunks(Np,n2);
 	if (n>2):
 		o.listn3 = mkchunks(Np,n3);

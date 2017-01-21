@@ -5,6 +5,8 @@ from multiprocessing import Pool
 from numpy import sqrt
 from scipy.sparse import coo_matrix, diags
 import numpy as np
+import gc
+from memtime import memtime
 
 #****************************************************************
 # sets global var: Hcsm, Hxsm, Hvsm, Hbsm, Hgsm, sft
@@ -15,7 +17,7 @@ n,m,mx,Np = o.n, o.m, o.mx, o.Np;
 ld = o.ld;
 # ld  = 0.5;
 n1fsym,n1,n2,n3,ntot = o.n1fsym,o.n1,o.n2,o.n3,o.ntot;
-listn2, listn3 = o.listn2, o.listn3
+listn1fsym, listn2, listn3 = o.listn1fsym, o.listn2, o.listn3
 detuning = o.detuning;
 corrtd = o.corrtd;
 
@@ -31,13 +33,14 @@ flat = lambda l: [item for sublist in l for item in sublist];
 # unexcited-sites-diagonal part:
 def fHb(jj):
 # 	print('fHb: n1,n2,ntot, mx = ',n1,n2,ntot, mx)
-	Hbloc=[];
+	Hbloc=np.zeros((3,mx+1));
 	for mi in range(1,mx+1):
 		# transitions only for the same jj but adjuscent mi's.
 		i=(mi-1)*n2+jj # coor in lower right block
 		j=mi*n2 + jj 
 		hbij = sqrt(mi); 
-		Hbloc.append([n1+i,n1+j,(1-ld)*hbij]);
+		#Hbloc.append([n1+i,n1+j,(1-ld)*hbij]);
+		Hbloc[:,mi]= n1+i,n1+j,(1-ld)*hbij
 	return Hbloc
 
 # ------------------------------
@@ -45,22 +48,25 @@ def fHb(jj):
 # 'not-special'-sites-diagonal part: Pss = Photon special site
 # Photon: extra-basis: s.s
 def fHbP2ss(jj):
-	Hblp2ss=[];
+	Hblp2ss=np.zeros((3, mx-m))
 	mn2j =n1fsym -(m+1)*n2 + jj;
+	ind = 0;
 	for mj2 in range(m+1,mx+1):
 		mj1 = mj2 - 1;	
 		# transitions only for the same jj but adjuscent mi's.
 		i1= mj1*n2 +mn2j;
 		i2= mj2*n2 +mn2j;
 		hbij = sqrt(mj2); 
-		Hblp2ss.append([i1,i2,-ld*hbij]); 
+		Hblp2ss[:,ind] = i1,i2,-ld*hbij
+		ind += 1;
 	return Hblp2ss
 # ------------------------------
 # Photon: extra-basis: o.s
 # special-sites-diagonal part: Pos = Photon other site
 def fHbP2os(kchunk):
-	hb2pos = [];
-	mn2 = n1fsym -(m+1)*n2
+	hb2pos = np.zeros((3,m*(mx-m)*(kchunk[1]-kchunk[0]) ))
+	mn2 = n1fsym -(m+1)*n2;
+	ind = 0;
 	for kk in range(kchunk[0],kchunk[1]):
 		Pkk = o.Norm3l[kk];
 		for mk2 in range(1,m+1):
@@ -77,12 +83,14 @@ def fHbP2os(kchunk):
 			for mj in range(m+1,mx+1):
 				i1= mj*n2 + mnj1;
 				i2= mj*n2 + mnj2;
-				hb2pos.append([i1,i2,-ld*xij]);
+				hb2pos[:,ind] = i1,i2,-ld*xij
+				ind += 1;
 	return hb2pos
 #--------------------------------
 # n=2 case: kchunk not available!
 def fHbP2osn2(mj1): # pool map range(0,m), not m+1
-	hb2posn2 = [];
+	hb2posn2 = np.zeros((3,mx-m));
+	ind = 0;
 	mj2 = mj1 + 1;
 	mn2j1 = n1fsym-(m+1)*n2 + mj1
 	mn2j2 = n1fsym-(m+1)*n2 + mj2
@@ -90,11 +98,13 @@ def fHbP2osn2(mj1): # pool map range(0,m), not m+1
 	for mj in range(m+1,mx+1):
 		i1 = mj*n2 + mn2j1;
 		i2 = mj*n2 + mn2j2;
-		hb2posn2.append([i1,i2,-ld*xij]);
+		hb2posn2[:,ind] = i1,i2,-ld*xij
+		ind += 1;
 	return hb2posn2
 # ------------------------------
 # Photon: fsym_extra-basis (12):  s.s
 def fHbP12ss(jj):
+	x = np.array((3,1))
 	# only mj1 = m, mj2 = m+1 because mj1 <= m & mj2 >= m+1
 	mj1 = m; mj2 = m+1;	
 	# transitions only for the same jj but adjuscent mi's.
@@ -102,8 +112,9 @@ def fHbP12ss(jj):
 	i2 = n1fsym + jj;#i2= n1fsym + (mj2-m-1)*n2 + jj;
 	Pii= o.Norm1l[i1];
 	Pjj= o.Norm2l[jj];
-	hbij = sqrt(mj2*n*Pjj/Pii); 
-	return [i1,i2,-ld*hbij];
+	hbij = sqrt(mj2*n*Pjj/Pii);
+	x[:,0] = i1,i2,-ld*hbij 
+	return x
 # ------------------------------
 # ------------------------------
 
@@ -116,7 +127,8 @@ def fHbP12ss(jj):
 # ------------------------------
 # photon block:
 def fHb1(jchunk):
-	hb1 = [];
+	hb1=np.zeros((3,m*(jchunk[1]-jchunk[0]) ));
+	ind = 0;
 	for jj in range(jchunk[0],jchunk[1]):
 		m1 = o.Norm2l[jj];
 		for mj1 in range(0,m):
@@ -128,13 +140,15 @@ def fHb1(jchunk):
 				yy = sqrt(mj2);
 				xx = sqrt(m11*m12);
 				xij = -ld*m1*n*yy/xx; # -ld displaced 
-				hb1.append([i1,i2,xij]);
+				hb1[:,ind]= i1,i2,xij
+				ind += 1;
 	return hb1
 # ------------------------------
 # exciton block: excited-site-diagonal part
 # ------------------------------
 def fHb2(kchunk):
-	hb2 = [];
+	hb2=np.zeros((3,m*(mx+1)*(kchunk[1]-kchunk[0]) ));
+	ind = 0;
 	for kk in range(kchunk[0],kchunk[1]):
 		m1 = o.Norm3l[kk];
 		for mj1 in range(0,m):
@@ -149,11 +163,12 @@ def fHb2(kchunk):
 				for m2 in range(0,mx+1):
 					ii1=m2*n2 + i1; # diag in m2 contrib only
 					ii2=m2*n2 + i2;
-					hb2.append([n1+ii1,n1+ii2,xij]);
+					hb2[:,ind]= n1+ii1,n1+ii2,xij
+					ind += 1;
 	return hb2
 # ------------------------------	
 def fHb2n2(mj1):
-	hb2 = [];
+	hb2 = np.zeros((3,mx+1))
 	mj2 = mj1+1;
 	i1 = mj1;
 	i2 = mj2;
@@ -162,14 +177,15 @@ def fHb2n2(mj1):
 	for m2 in range(0,mx+1):
 		ii1=m2*n2 + i1; # diag in m2 contrib only
 		ii2=m2*n2 + i2;
-		hb2.append([n1+ii1,n1+ii2,xij]);
+		hb2[:,m2] = n1+ii1,n1+ii2,xij
 	return hb2
 # ------------------------------	
 
 #****************************************************************
 # calculate matrix elements of Hg using mapping21 (nparray)
 def getHg(jchunk):
-	Hgloc = [];
+	Hgloc = np.zeros((3, (mx+1)*(jchunk[1]-jchunk[0])));
+	ind = 0;
 	for jj in range(jchunk[0],jchunk[1]):
 		m2 = o.Norm2l[jj];
 		for mj in range(0,m+1):
@@ -177,7 +193,8 @@ def getHg(jchunk):
 			ii = o.map21[jj,mj]
 			m1 = o.Norm1l[ii];
 			hgij=sqrt(n*m2/m1)
-			Hgloc.append([ii,j,hgij]);
+			Hgloc[:,ind] = ii,j,hgij
+			ind += 1;
 		# extra basis: diag in mj,jj
 		for mj in range(m+1,mx+1): 
 			# coor in exciton block
@@ -185,32 +202,50 @@ def getHg(jchunk):
 			# shift j by -(n1+n2*(m+1)) to get relative coor
 			# then shift by + n1fsym
 			ii = n1fsym +(mj-m-1)*n2 + jj;
-			Hgloc.append([ii,j,1]); 
+			Hgloc[:,ind] = ii,j,1
+			ind += 1;
 	return Hgloc
 #****************************************************************
 # in photon 1c block
 # for i in range(0,n1fsym):
-def fHv1c(i): 
-	Nvi = o.Nv1l[i]
-	return [i,i,Nvi]	
+def fHv1c(ichunk):
+	Hvloc = np.zeros((3,ichunk[1]-ichunk[0]))
+	ind=0;
+	for i in range(ichunk[0],ichunk[1]):
+		Nvi = o.Nv1l[i];
+		Hvloc[:,ind] = i,i,Nvi
+		ind += 1;
+	return Hvloc
+
+def fHv1cnew():
+	Hv1c = np.zeros((3,n1fsym));
+	Hv1c[0,:] = range(n1fsym)
+	Hv1c[1,:] = range(n1fsym)
+	Hv1c[2,:] = o.Nv1l[:];
+	return Hv1c
+
 # Hv for extra states in photon block:
 def fHv1cExtra(jchunk):
-	Hvloc = [];
+	Hvloc = np.zeros((3,(mx-m)*(jchunk[1]-jchunk[0])))
+	ind=0;
 	for jj in range(jchunk[0],jchunk[1]):
 		for mj in range(m+1,mx+1):
 			Nvj = o.Nv1l[jj] + mj
 			i = n1fsym +(mj-m-1)*n2 + jj;
-			Hvloc.append([i,i,Nvj])
+			Hvloc[:,ind] = i,i,Nvj
+			ind += 1;
 	return Hvloc
 #****************************************************************
 # in exciton 0c block
-# for j in range(0,n2):
-def fHv0c(j):
-	Hvloc = [];
-	for mj in range(0,mx+1):
-		Nvj = o.Nv1l[j] + mj
-		jj = n1 + mj*n2 + j
-		Hvloc.append([jj,jj,Nvj])
+def fHv0c(jchunk):
+	Hvloc = np.zeros((3,(mx+1)*(jchunk[1]-jchunk[0])))
+	ind=0;
+	for j in range(jchunk[0],jchunk[1]):
+		for mj in range(0,mx+1):
+			Nvj = o.Nv1l[j] + mj
+			jj = n1 + mj*n2 + j
+			Hvloc[:,ind] = jj,jj,Nvj
+			ind += 1;
 	return Hvloc
 #****************************************************************
 # Hc & Hx
@@ -224,6 +259,32 @@ def fHx(i):
 	return [i,i,1]
 #****************************************************************
 
+def fHcnew():
+	Hc = np.zeros((3,n1));
+	Hc[0,:] = range(n1)
+	Hc[1,:] = range(n1)
+	Hc[2,:] = 1;
+	return Hc
+
+def fHxnew():
+	Hx = np.zeros((3,ntot-n1));
+	Hx[0,:] = range(n1,ntot)
+	Hx[1,:] = range(n1,ntot)
+	Hx[2,:] = 1;
+	return Hx
+
+def fsftm():
+	# shifts due to half displaced basis
+	disp1=n*ld**2; # photon block
+	disp2=n*ld**2 - 2*ld; # exciton block
+	# not -2*n*ld: sum_i[cidag*ci (-2lam)] = -2lam*sum_i[cidag*ci] = -2lam
+	sftm = np.zeros((3,ntot));
+	sftm[0,:] = range(ntot);
+	sftm[1,:] = range(ntot);
+	sftm[2,:n1] = disp1;	
+	sftm[2,n1:] = disp2;	
+	return sftm
+		
 
 
 
@@ -231,6 +292,12 @@ def fHx(i):
 #  Hamiltonain: parallel
 #****************************************************************
 def hamilt():
+
+	#print('listn2 = ',listn2)
+	#print('listn3 = ',listn3)	#****************************************************************
+	# calculate Hamiltonain and set global variables:
+	# Hcsm, Hxsm, Hvsm, Hbsm, Hgsm, sft
+	#****************************************************************
 	print(' ====> calculating Hamiltonian ... ');
 # -------------------------
 #  n =1 case:
@@ -254,15 +321,13 @@ def hamilt():
 		# 	extra complication due to photon block's extra basis states
 		if(n==2):
 			Hb2 = pool.map(fHb2n2,range(m)); # not range(m+1), it's row indeces for b
-			Hb2=flat(Hb2);
 			if mx>m:
 				HbP2os = pool.map(fHbP2osn2,range(m));
-				HbP2os = flat(HbP2os);
+				#HbP2os = flat(HbP2os);
 			else:
 				HbP2os = [];
 		elif (n>2):
 			Hb2 = pool.map(fHb2,listn3);
-			Hb2=flat(Hb2);
 			if mx>m:
 				HbP2os = pool.map(fHbP2os,listn3);
 				HbP2os = flat(HbP2os);
@@ -270,78 +335,75 @@ def hamilt():
 				HbP2os = [];
 
 		Hb1 = pool.map(fHb1,listn2);
-		Hb1 = flat(Hb1);
 		if mx>m:
 			HbP2ss = pool.map(fHbP2ss,range(0,n2));
 			HbP2ss = flat(HbP2ss);
 			HbP12ss = pool.map(fHbP12ss,range(0,n2));
 		else:
 			HbP12ss = []; HbP2ss=[];
-
 		Hb2b = pool.map(fHb,range(0,n2));
-		Hb2b=flat(Hb2b);
 		Hb = Hb1+Hb2+Hb2b+HbP2os+HbP2ss+HbP12ss;
-		if 0:
-			print('------------');
-			print(Hb1)
-			print(Hb2)
-			print(Hb2b)
-			print(HbP2os)
-			print(HbP2ss)
-			print(HbP12ss)
 	# -----------------------------------------
 	else:
 		Hb = [];
 		# undisplaced basis: only electronically excited site is vib coupled:
 		# calc of non-zero matrix elements of H_b = sum_n[c_n^deggar.c_n.b_n]
 		Hb = pool.map(fHb,range(0,n2));
-		Hb=flat(Hb);
-	# -----------------------------------------
+
+	Hb = np.hstack(Hb);
+	o.Hbsm = coomatnp(Hb,1); 
+	del Hb; gc.collect()
+	#memtime('Hb');
 	print("        Hb calculated...")
 
 	Hg=pool.map(getHg,listn2);
-	Hg=flat(Hg)
+	Hg = np.hstack(Hg);
+	o.Hgsm = coomatnp(Hg,1); del Hg; gc.collect()
+	#memtime('Hg');
 	print("        Hg calculated...")
 
 	# in photon 1c block
-	Hv1c= pool.map(fHv1c,range(0,n1fsym))
+	#Hv1c= pool.map(fHv1c,listn1fsym); # range(0,n1fsym)
+	Hv1c= [fHv1cnew()];
 	Hv1cExtra= pool.map(fHv1cExtra,listn2)
 	# in exciton 0c block
-	Hv0c=pool.map(fHv0c,range(0,n2));
+	Hv0c=pool.map(fHv0c,listn2);
 	# flat and join lists
-	Hv = Hv1c + flat(Hv1cExtra) + flat(Hv0c)
+	Hv = Hv1c + Hv1cExtra + Hv0c;
+	Hv = np.hstack(Hv);
+	o.Hvsm = coomatnp(Hv,0); del Hv; gc.collect()
+	#memtime('Hv');
 	print("        Hv calculated...")
 	
 	# Hc & Hx
-	if (corrtd or detuning):
-		Hc= pool.map(fHc,range(0,n1))
-		Hx= pool.map(fHx,range(n1,ntot))
+	if (corrtd or detuning): # corrtd or 
+		Hc= fHcnew()
+		o.Hcsm = coomatnp(Hc,0); del Hc; gc.collect()
+		Hx= fHxnew();		
+		o.Hxsm = coomatnp(Hx,0); del Hx; gc.collect()
+	else:
+		o.Hcsm= coo_matrix(([], ([], [])), shape=(ntot, ntot))	
+		o.Hxsm= coo_matrix(([], ([], [])), shape=(ntot, ntot))	
+	#memtime('Hcx');
+	print("        Hc,x calculated... ")
+
+	# old functions use map... 
+	if 0 and detuning: # corrtd or 
+		Hc= pool.map(fHc,range(0,n1));
+		o.Hcsm = coomat(Hc,0); del Hc; gc.collect()
+		Hx= pool.map(fHx,range(n1,ntot))		
+		o.Hxsm = coomat(Hx,0); del Hx; gc.collect()
 		print("        Hc,x calculated... ")
-	
+
 	pool.close() # this pool does not know various variables calculated after its start
-	#****************************************************************
-	# form complete Hamiltonain and set global variables:
-	# Hcsm, Hxsm, Hvsm, Hbsm, Hgsm, sft
-	#****************************************************************
-	o.Hgsm = coomat(Hg,1); del Hg;
-	o.Hbsm = coomat(Hb,1); del Hb;
-	o.Hvsm = coomat(Hv,0); del Hv;
-	if (corrtd or detuning):
-		o.Hcsm = coomat(Hc,0); del Hc
-		o.Hxsm = coomat(Hx,0); del Hx
-	# shifts due to half displaced basis
-	disp1=n*ld**2; # photon block
-	disp2=n*ld**2 - 2*ld; # exciton block
-	# not -2*n*ld: sum_i[cidag*ci (-2lam)] = -2lam*sum_i[cidag*ci] = -2lam
-	sftm = [];
-	if abs(ld) > 1e-8:
-		for i in range(n1):
-			sftm.append([i,i,disp1])
-		for i in range(n1,ntot):
-			sftm.append([i,i,disp2])
-	o.sft= coomat(sftm,0); del sftm;
+
+	if abs(ld) > 1e-5:
+		sftm = fsftm();
+		o.sft= coomatnp(sftm,0); del sftm; gc.collect()
+	else:
+		o.sft= coo_matrix(([], ([], [])), shape=(ntot, ntot))
+	#memtime('sft');
 	# ------------------------------------------
-	#print('o.sft='); print(o.sft)
 	return
 
 
@@ -363,7 +425,7 @@ def hamiltn1(mx):
 		Hv.append([i,i,i]);
 		Hv.append([n1+i,n1+i,i]);
 	o.Hvsm = coomat(Hv,0);  del Hv;
-	if (corrtd or detuning):
+	if (corrtd or detuning): #corrtd or 
 		Hc = [];
 		for i in range(0,mx+1):
 			Hc.append([i,i,1]);
@@ -376,6 +438,13 @@ def hamiltn1(mx):
 	# ------------------------
 	return
 
+def coomatnp(x,sym):
+	Y = coo_matrix((x[2,:], (x[0,:], x[1,:])), shape=(ntot, ntot))
+	if sym:
+		# complete matrices from upper/lower triangular
+		Y = Y + Y.transpose() - diags(Y.diagonal(),0)
+	return Y
+
 def coomat(X,sym):
 		row=[];col=[];dat=[];
 		for x in X:
@@ -387,5 +456,4 @@ def coomat(X,sym):
 			# complete matrices from upper/lower triangular
 			Y = Y + Y.transpose() - diags(Y.diagonal(),0)
 		return Y
-
 

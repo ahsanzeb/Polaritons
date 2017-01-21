@@ -5,6 +5,8 @@ from multiprocessing import Pool
 from numpy import sqrt
 from scipy.sparse import coo_matrix, diags
 import numpy as np
+import gc
+from memtime import memtime
 
 #****************************************************************
 # sets global var: Hcsm, Hxsm, Hvsm, Hbsm, Hgsm, sft
@@ -231,6 +233,10 @@ def fHx(i):
 #  Hamiltonain: parallel
 #****************************************************************
 def hamilt():
+	#****************************************************************
+	# calculate Hamiltonain and set global variables:
+	# Hcsm, Hxsm, Hvsm, Hbsm, Hgsm, sft
+	#****************************************************************
 	print(' ====> calculating Hamiltonian ... ');
 # -------------------------
 #  n =1 case:
@@ -281,14 +287,6 @@ def hamilt():
 		Hb2b = pool.map(fHb,range(0,n2));
 		Hb2b=flat(Hb2b);
 		Hb = Hb1+Hb2+Hb2b+HbP2os+HbP2ss+HbP12ss;
-		if 0:
-			print('------------');
-			print(Hb1)
-			print(Hb2)
-			print(Hb2b)
-			print(HbP2os)
-			print(HbP2ss)
-			print(HbP12ss)
 	# -----------------------------------------
 	else:
 		Hb = [];
@@ -297,10 +295,15 @@ def hamilt():
 		Hb = pool.map(fHb,range(0,n2));
 		Hb=flat(Hb);
 	# -----------------------------------------
+	o.Hbsm = coomat(Hb,1); 
+	del Hb; gc.collect()
+	#memtime('Hb');
 	print("        Hb calculated...")
 
 	Hg=pool.map(getHg,listn2);
-	Hg=flat(Hg)
+	Hg=flat(Hg);
+	o.Hgsm = coomat(Hg,1); del Hg; gc.collect()
+	#memtime('Hg');
 	print("        Hg calculated...")
 
 	# in photon 1c block
@@ -309,26 +312,22 @@ def hamilt():
 	# in exciton 0c block
 	Hv0c=pool.map(fHv0c,range(0,n2));
 	# flat and join lists
-	Hv = Hv1c + flat(Hv1cExtra) + flat(Hv0c)
+	Hv = Hv1c + flat(Hv1cExtra) + flat(Hv0c);
+	o.Hvsm = coomat(Hv,0); del Hv; gc.collect()
+	#memtime('Hv');
 	print("        Hv calculated...")
 	
 	# Hc & Hx
 	if (corrtd or detuning):
-		Hc= pool.map(fHc,range(0,n1))
-		Hx= pool.map(fHx,range(n1,ntot))
+		Hc= pool.map(fHc,range(0,n1));
+		o.Hcsm = coomat(Hc,0); del Hc; gc.collect()
+		Hx= pool.map(fHx,range(n1,ntot))		
+		o.Hxsm = coomat(Hx,0); del Hx; gc.collect()
+		#memtime('Hcx');
 		print("        Hc,x calculated... ")
-	
+
 	pool.close() # this pool does not know various variables calculated after its start
-	#****************************************************************
-	# form complete Hamiltonain and set global variables:
-	# Hcsm, Hxsm, Hvsm, Hbsm, Hgsm, sft
-	#****************************************************************
-	o.Hgsm = coomat(Hg,1); del Hg;
-	o.Hbsm = coomat(Hb,1); del Hb;
-	o.Hvsm = coomat(Hv,0); del Hv;
-	if (corrtd or detuning):
-		o.Hcsm = coomat(Hc,0); del Hc
-		o.Hxsm = coomat(Hx,0); del Hx
+
 	# shifts due to half displaced basis
 	disp1=n*ld**2; # photon block
 	disp2=n*ld**2 - 2*ld; # exciton block
@@ -339,9 +338,8 @@ def hamilt():
 			sftm.append([i,i,disp1])
 		for i in range(n1,ntot):
 			sftm.append([i,i,disp2])
-	o.sft= coomat(sftm,0); del sftm;
+	o.sft= coomat(sftm,0); del sftm; gc.collect()
 	# ------------------------------------------
-	#print('o.sft='); print(o.sft)
 	return
 
 

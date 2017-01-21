@@ -104,14 +104,6 @@ if hasattr(param, 'absorption'):
 					#print(" tf > 30/(kappa+gamma): setting tf = 30/(kappa+gamma) = ",tdecay);
 					print(" tf > 30/(kappa+gamma):  tf, 1/(kappa+gamma)= ",tf,1/(kappa+gamma));
 					print(" tf ~ 30/(kappa+gamma) should be ok ... ");
-				if tf/dt > 10000:
-					print(" to avoid ntmax > 10000: set tf/dt to default 100, 0.01 ...")
-					if dt >= 0.01:
-						tf = 1000*dt;
-						print("ntmax > 10000; dt >= 0.01: setting tf = 1000*dt = ",tf)
-					else:
-						dt = tf/1000;
-						print("ntmax > 10000; tf <= 100: setting dt = tf/1000 = ",dt)
 				# Fourier Transform: 
 				# freq range within one 'period'.
 				Wft = 2*pi/dt; # period on freq axis

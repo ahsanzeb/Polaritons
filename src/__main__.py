@@ -3,7 +3,8 @@
 import globalvariables as o
 import basis
 from memtime import memtime
-from auxfunc import prntmsg,createoutdir
+from auxfunc import prntmsg,createoutdir,setNp
+
 
 import time, sys
 from importlib import reload
@@ -26,7 +27,7 @@ memtime('readinput');# print memory and time info
 # start some local variables for use below
 nlist = o.nlist; 
 mlist = o.mlist;
-n, m, mx, Np = o.n, o.m, o.mx, o.Np;
+n, m, mx, Np0 = o.n, o.m, o.mx,o.Np;
 corrtd, matelem = o.corrtd, o.matelem;
 groundstate, justenergy = o.groundstate, o.justenergy
 diffoutdir = o.diffoutdir;
@@ -62,6 +63,9 @@ for nn in nlist:
 	
 	#o.ld = 0.1*niter;
 	print('o.ld = ',o.ld)
+
+	# set Np <= n3
+	Np = setNp(n,m,Np0); o.Np=Np;
 	# -------------------------
 	# calc symmetrised phonon basis related quantities
 	# sets global: Nv1l,Nv2l,Norm1l,Norm2l,Norm3l,map21,map32
@@ -73,7 +77,7 @@ for nn in nlist:
 	# set global variables: Hcsm, Hxsm, Hvsm, Hbsm, Hgsm, sft
 	if niter==0: import hamiltonian; 
 	else: reload(hamiltonian)
-# import here to use the right values for global variables
+	# import here to use the right values for global variables
 	hamiltonian.hamilt();
 	memtime('hamiltonian');# print memory and time info
 	# -------------------------------------------------------
