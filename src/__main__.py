@@ -31,7 +31,7 @@ n, m, mx, Np0 = o.n, o.m, o.mx,o.Np;
 corrtd, matelem = o.corrtd, o.matelem;
 groundstate, justenergy = o.groundstate, o.justenergy
 diffoutdir = o.diffoutdir;
-old0 = o.ld; # to reset ld value for n!=1
+old = o.ld; # to reset ld value for n!=1
 lamlist = o.lamlist;
 uselamlist = o.uselamlist;
 wclist=o.wclist;
