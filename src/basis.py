@@ -154,7 +154,16 @@ def fbasis(n,m,mx,Np):
 	# -------------------------------------------------------
 	print(" n_photon, n_exciton, ntot = ", n1, n2*(mx+1), ntot)
 	print(' calculating mapping ... ')
-	mapping.getmapp(n,m,Np);# calculate and set o.map21
+	if m==0:
+		map21 = np.zeros((1,1),np.int16);
+		map21[0,0] = 0; o.map21 = map21;
+		#print(n1fsym,n1,n2,n3)
+		#print(o.listn1fsym,o.listn2,o.listn3)
+		#print(o.Nv1l)
+		#print(o.Norm1l,o.Norm2l,o.Norm3l)
+	else:
+		mapping.getmapp(n,m,Np);# calculate and set o.map21
+				
 	return
 #-----------------------------------------------
 # make full sets and get nv,norms,fac

@@ -31,7 +31,7 @@ n, m, mx, Np0 = o.n, o.m, o.mx,o.Np;
 corrtd, matelem = o.corrtd, o.matelem;
 groundstate, justenergy = o.groundstate, o.justenergy
 diffoutdir = o.diffoutdir;
-old = o.ld; # to reset ld value for n!=1
+old0 = o.ld; # to reset ld value for n!=1
 lamlist = o.lamlist;
 uselamlist = o.uselamlist;
 wclist=o.wclist;
@@ -58,8 +58,10 @@ for nn in nlist:
 	prntmsg(n,m,mx,niter,lnlist); 
 	# create output directory
 	o.dumy = createoutdir(n,diffoutdir);
-	if n==1: o.ld = 0; # undisplaced basis are used
-	else: o.ld = old;
+	if n==1 or m==0:
+		o.ld = 0; # undisplaced basis are used
+	else:
+		o.ld = old;
 	
 	#o.ld = 0.1*niter;
 	print('o.ld = ',o.ld)
@@ -75,11 +77,19 @@ for nn in nlist:
 	# -------------------------------------------------------
 	# calculate Hamiltonian:
 	# set global variables: Hcsm, Hxsm, Hvsm, Hbsm, Hgsm, sft
-	if niter==0: import hamiltonian; 
-	else: reload(hamiltonian)
-	# import here to use the right values for global variables
-	hamiltonian.hamilt();
-	memtime('hamiltonian');# print memory and time info
+	if 1:
+		if niter==0: import hamiltonian; 
+		else: reload(hamiltonian)
+		# import here to use the right values for global variables
+		hamiltonian.hamilt();
+		memtime('hamiltonian');# print memory and time info
+	else:
+		if niter==0: import hamiltonianLists; 
+		else: reload(hamiltonianLists)
+		# import here to use the right values for global variables
+		hamiltonianLists.hamilt();
+		memtime('hamiltonianList');# print memory and time info
+	
 	# -------------------------------------------------------
 	if corrtd:
 		# absorption: using time evolution:

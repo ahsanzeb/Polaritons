@@ -104,7 +104,7 @@ def fHbP2osn2(mj1): # pool map range(0,m), not m+1
 # ------------------------------
 # Photon: fsym_extra-basis (12):  s.s
 def fHbP12ss(jj):
-	x = np.array((3,1))
+	x = np.zeros((3,1));
 	# only mj1 = m, mj2 = m+1 because mj1 <= m & mj2 >= m+1
 	mj1 = m; mj2 = m+1;	
 	# transitions only for the same jj but adjuscent mi's.
@@ -323,21 +323,18 @@ def hamilt():
 			Hb2 = pool.map(fHb2n2,range(m)); # not range(m+1), it's row indeces for b
 			if mx>m:
 				HbP2os = pool.map(fHbP2osn2,range(m));
-				#HbP2os = flat(HbP2os);
 			else:
 				HbP2os = [];
 		elif (n>2):
 			Hb2 = pool.map(fHb2,listn3);
 			if mx>m:
 				HbP2os = pool.map(fHbP2os,listn3);
-				HbP2os = flat(HbP2os);
 			else:
 				HbP2os = [];
 
 		Hb1 = pool.map(fHb1,listn2);
 		if mx>m:
 			HbP2ss = pool.map(fHbP2ss,range(0,n2));
-			HbP2ss = flat(HbP2ss);
 			HbP12ss = pool.map(fHbP12ss,range(0,n2));
 		else:
 			HbP12ss = []; HbP2ss=[];
@@ -353,13 +350,13 @@ def hamilt():
 	Hb = np.hstack(Hb);
 	o.Hbsm = coomatnp(Hb,1); 
 	del Hb; gc.collect()
-	#memtime('Hb');
+	memtime('Hb');
 	print("        Hb calculated...")
 
 	Hg=pool.map(getHg,listn2);
 	Hg = np.hstack(Hg);
 	o.Hgsm = coomatnp(Hg,1); del Hg; gc.collect()
-	#memtime('Hg');
+	memtime('Hg');
 	print("        Hg calculated...")
 
 	# in photon 1c block
@@ -368,11 +365,10 @@ def hamilt():
 	Hv1cExtra= pool.map(fHv1cExtra,listn2)
 	# in exciton 0c block
 	Hv0c=pool.map(fHv0c,listn2);
-	# flat and join lists
 	Hv = Hv1c + Hv1cExtra + Hv0c;
 	Hv = np.hstack(Hv);
 	o.Hvsm = coomatnp(Hv,0); del Hv; gc.collect()
-	#memtime('Hv');
+	memtime('Hv');
 	print("        Hv calculated...")
 	
 	# Hc & Hx
@@ -384,16 +380,8 @@ def hamilt():
 	else:
 		o.Hcsm= coo_matrix(([], ([], [])), shape=(ntot, ntot))	
 		o.Hxsm= coo_matrix(([], ([], [])), shape=(ntot, ntot))	
-	#memtime('Hcx');
+	memtime('Hcx');
 	print("        Hc,x calculated... ")
-
-	# old functions use map... 
-	if 0 and detuning: # corrtd or 
-		Hc= pool.map(fHc,range(0,n1));
-		o.Hcsm = coomat(Hc,0); del Hc; gc.collect()
-		Hx= pool.map(fHx,range(n1,ntot))		
-		o.Hxsm = coomat(Hx,0); del Hx; gc.collect()
-		print("        Hc,x calculated... ")
 
 	pool.close() # this pool does not know various variables calculated after its start
 
@@ -402,7 +390,7 @@ def hamilt():
 		o.sft= coomatnp(sftm,0); del sftm; gc.collect()
 	else:
 		o.sft= coo_matrix(([], ([], [])), shape=(ntot, ntot))
-	#memtime('sft');
+	memtime('sft');
 	# ------------------------------------------
 	return
 
