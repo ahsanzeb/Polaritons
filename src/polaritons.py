@@ -77,19 +77,11 @@ for nn in nlist:
 	# -------------------------------------------------------
 	# calculate Hamiltonian:
 	# set global variables: Hcsm, Hxsm, Hvsm, Hbsm, Hgsm, sft
-	if 1:
-		if niter==0: import hamiltonian; 
-		else: reload(hamiltonian)
-		# import here to use the right values for global variables
-		hamiltonian.hamilt();
-		memtime('hamiltonian');# print memory and time info
-	else:
-		if niter==0: import hamiltonianLists; 
-		else: reload(hamiltonianLists)
-		# import here to use the right values for global variables
-		hamiltonianLists.hamilt();
-		memtime('hamiltonianList');# print memory and time info
-	
+	if niter==0: import hamiltonian; 
+	else: reload(hamiltonian)
+	# import here to use the right values for global variables
+	hamiltonian.hamilt();
+	memtime('hamiltonian');# print memory and time info	
 	# -------------------------------------------------------
 	if corrtd:
 		# absorption: using time evolution:
