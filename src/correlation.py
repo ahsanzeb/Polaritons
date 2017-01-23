@@ -414,7 +414,9 @@ def createpsi0(lam0):
 				if x> 1e-12: # remove very small numbers to avoid numpy/scipy crash
 					i = mn + mj*n2 + jj;
 					psi0[i] = x;
-		# ----------- 'extra' basis --------------
+		norm=np.linalg.norm(psi0)
+		if norm > 0:
+			psi0 = psi0/norm;
 	else: # for undisplaced basis
 		psi0 = np.zeros(ntot);
 		psi0[0] = 1;

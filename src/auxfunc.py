@@ -23,10 +23,11 @@ def createoutdir(N,diffoutdir):
 	return dumy
 
 def setNp(n,m,Np):
-	n3 = int(scipy.special.binom(m+n-2,m));
-	if n3 < Np:
-		print(' n3 < Np ====> o.Np=n3');
-		Np = n3;
+	if n>1:
+		n3 = int(scipy.special.binom(m+n-2,m));
+		if n3 < Np:
+			print(' n3 < Np ====> o.Np=n3');
+			Np = n3;
 	return Np
 
 
