@@ -58,7 +58,7 @@ for nn in nlist:
 	prntmsg(n,m,mx,niter,lnlist); 
 	# create output directory
 	o.dumy = createoutdir(n,diffoutdir);
-	if n==1 or m==0:
+	if n==1: #or m==0:
 		o.ld = 0; # undisplaced basis are used
 	else:
 		o.ld = old;
