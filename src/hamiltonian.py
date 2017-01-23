@@ -6,7 +6,7 @@ from numpy import sqrt
 from scipy.sparse import coo_matrix, diags
 import numpy as np
 import gc
-from memtime import memtime
+#from memtime import memtime
 
 #****************************************************************
 # sets global var: Hcsm, Hxsm, Hvsm, Hbsm, Hgsm, sft
@@ -248,25 +248,14 @@ def fHv0c(jchunk):
 			ind += 1;
 	return Hvloc
 #****************************************************************
-# Hc & Hx
-#for i in range(0,n1):
-def fHc(i):
-	return [i,i,1]
-#****************************************************************
-#Hx = [];
-#for i in range(n1,ntot):
-def fHx(i):
-	return [i,i,1]
-#****************************************************************
-
-def fHcnew():
+def fHc():
 	Hc = np.zeros((3,n1));
 	Hc[0,:] = range(n1)
 	Hc[1,:] = range(n1)
 	Hc[2,:] = 1;
 	return Hc
 
-def fHxnew():
+def fHx():
 	Hx = np.zeros((3,ntot-n1));
 	Hx[0,:] = range(n1,ntot)
 	Hx[1,:] = range(n1,ntot)
@@ -350,13 +339,13 @@ def hamilt():
 	Hb = np.hstack(Hb);
 	o.Hbsm = coomatnp(Hb,1); 
 	del Hb; gc.collect()
-	memtime('Hb');
+	#memtime('Hb');
 	print("        Hb calculated...")
 
 	Hg=pool.map(getHg,listn2);
 	Hg = np.hstack(Hg);
 	o.Hgsm = coomatnp(Hg,1); del Hg; gc.collect()
-	memtime('Hg');
+	#memtime('Hg');
 	print("        Hg calculated...")
 
 	# in photon 1c block
@@ -368,19 +357,19 @@ def hamilt():
 	Hv = Hv1c + Hv1cExtra + Hv0c;
 	Hv = np.hstack(Hv);
 	o.Hvsm = coomatnp(Hv,0); del Hv; gc.collect()
-	memtime('Hv');
+	#memtime('Hv');
 	print("        Hv calculated...")
 	
 	# Hc & Hx
 	if (corrtd or detuning): # corrtd or 
-		Hc= fHcnew()
+		Hc= fHc()
 		o.Hcsm = coomatnp(Hc,0); del Hc; gc.collect()
-		Hx= fHxnew();		
+		Hx= fHx();		
 		o.Hxsm = coomatnp(Hx,0); del Hx; gc.collect()
 	else:
 		o.Hcsm= coo_matrix(([], ([], [])), shape=(ntot, ntot))	
 		o.Hxsm= coo_matrix(([], ([], [])), shape=(ntot, ntot))	
-	memtime('Hcx');
+	#memtime('Hcx');
 	print("        Hc,x calculated... ")
 
 	pool.close() # this pool does not know various variables calculated after its start
@@ -390,7 +379,7 @@ def hamilt():
 		o.sft= coomatnp(sftm,0); del sftm; gc.collect()
 	else:
 		o.sft= coo_matrix(([], ([], [])), shape=(ntot, ntot))
-	memtime('sft');
+	#memtime('sft');
 	# ------------------------------------------
 	return
 
