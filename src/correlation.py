@@ -278,7 +278,7 @@ def fwriteFT(il,wlist, Gw, GR, fnametd, ntmax):
 	absOUT[:,0] = wlist;
 	absOUT[:,1] = np.real(Gw);
 	# 2*kl*np.imag(absws)**2 + kappa*np.abs(absws)**2;
-	absOUT[:,2] = 2*kl*np.real(Gw)**2 + kappa*np.abs(Gw)**2;
+	absOUT[:,2] = 2*kl*np.real(Gw) + kappa*np.abs(Gw)**2;
 	absOUT[:,3] = -np.imag(GR); # Green from analytical
 	f=open(fnametd,'ab');
 	if loopover =="lambda0":
@@ -300,13 +300,15 @@ def fwriteFT(il,wlist, Gw, GR, fnametd, ntmax):
 
 def fwriteFT2(il,wlist, Gw, GR, GR2, fnametd, ntmax):
 	# save FT of correlation
-	absOUT = np.zeros((nwmax,5));
+	absOUT = np.zeros((nwmax,6));
 	absOUT[:,0] = wlist;
 	absOUT[:,1] = np.real(Gw);
-	# 2*kl*np.imag(absws)**2 + kappa*np.abs(absws)**2;
-	absOUT[:,4] = 2*kl*np.real(Gw)**2 + kappa*np.abs(Gw)**2;
+	# 2*kl*np.imag(absws) + kappa*np.abs(absws)**2;
+	absOUT[:,4] = 2*kl*np.real(Gw) + kappa*np.abs(Gw)**2;
 	absOUT[:,2] = -np.imag(GR2);# truncated then transformed
 	absOUT[:,3] = -np.imag(GR); # Green from analytical (transformed then trucated)
+	absOUT[:,5] = -2*kl*np.imag(GR) + kappa*np.abs(GR)**2;
+	
 	f=open(fnametd,'ab');
 	if loopover =="lambda0":
 		lamb0 = o.lambin0[il];
@@ -317,7 +319,7 @@ def fwriteFT2(il,wlist, Gw, GR, GR2, fnametd, ntmax):
 	header =" "+str(n)+" "+str(m)+" "+str(mx)+" "+str(nwmax)+" "+str(ntmax);
 	header += " "+str(wr0)+" "+str(lamb0)+" "+str(wc)+" "+str(wx)+" "+str(wv);
 	header += " "+str(gamma)+ " "+str(kappa)+ " "+str(tf)+ " "+str(dt);
-	np.savetxt(f, absOUT,fmt='%15.10f %15.10f %15.10f %15.10f %15.10f', delimiter=' ', header=header,comments='#')
+	np.savetxt(f, absOUT,fmt='%15.10f %15.10f %15.10f %15.10f %15.10f %15.10f', delimiter=' ', header=header,comments='#')
 	f.close();
 	f=open(fnametd,'at')
 	print('    ',file=f)
