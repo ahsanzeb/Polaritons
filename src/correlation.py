@@ -43,6 +43,14 @@ loopover= o.loopover;
 lambda0 = o.lambda0;
 lambin0 =	o.lambin0; # list of lam or wr values
 
+temp = o.temp;
+# if temp == 1:
+Nvs=[0,1,2,3,2,3];
+if n==1:
+	basinds = [0,1,2,3,2,3];
+else:
+	basinds = [0,1,2,3,m+1,m+2];
+
 
 # to supress printing of small floats, print them 0
 np.set_printoptions(suppress=True)
@@ -181,13 +189,22 @@ def gettdfort(il):
 		#print('o.sft.data = ',o.sft.data)
 		if nlmax ==1:
 			o.Hbsm = []; o.sft=[];
-		psi0 = createpsi0(o.ld*lamb0);
+		l0 = o.ld*lamb0
 	else:
 		g = o.lambin0[il]/np.sqrt(o.n);
 		ham = o.ham1 + g*o.Hgsm;
 		if nlmax ==1:
 			o.Hgsm = [];
-		psi0 = createpsi0(o.ld*lambda0);
+		l0 = o.ld*lambda0;
+
+	# if temp = 1: use loopover lambda0 to cheat for using different initial states in Ground vib band.
+	# use the same lambda0 for all cases... 
+	if temp:
+		psi0 = createpsi0temp(il);
+	else:
+		psi0 = createpsi0(l0);
+
+
 	ham = ham.tocsr();
 	# create arguments for fortran routine
 	Val=ham.data;# CSR format data array of the matrix
@@ -198,7 +215,7 @@ def gettdfort(il):
 	# shift index for fortran:
 	Col += 1; RowPtr += 1;
 	# integrate
-	corr = tcorr.tcorr(n1,ntot,nnz,nrp,printstep,Val,Col,RowPtr, psi0,dt,ntmax,kappa2,gamma2)
+	corr = tcorr.tcorr(0,n1,ntot,nnz,nrp,printstep,Val,Col,RowPtr, psi0,dt,ntmax,kappa2,gamma2)
 	return corr
 #----------------------------
 
@@ -283,11 +300,11 @@ def fwriteFT(il,wlist, Gw, GR, fnametd, ntmax):
 
 def fwriteFT2(il,wlist, Gw, GR, GR2, fnametd, ntmax):
 	# save FT of correlation
-	absOUT = np.zeros((nwmax,4));
+	absOUT = np.zeros((nwmax,5));
 	absOUT[:,0] = wlist;
 	absOUT[:,1] = np.real(Gw);
 	# 2*kl*np.imag(absws)**2 + kappa*np.abs(absws)**2;
-	#absOUT[:,2] = 2*kl*np.real(Gw)**2 + kappa*np.abs(Gw)**2;
+	absOUT[:,4] = 2*kl*np.real(Gw)**2 + kappa*np.abs(Gw)**2;
 	absOUT[:,2] = -np.imag(GR2);# truncated then transformed
 	absOUT[:,3] = -np.imag(GR); # Green from analytical (transformed then trucated)
 	f=open(fnametd,'ab');
@@ -300,7 +317,7 @@ def fwriteFT2(il,wlist, Gw, GR, GR2, fnametd, ntmax):
 	header =" "+str(n)+" "+str(m)+" "+str(mx)+" "+str(nwmax)+" "+str(ntmax);
 	header += " "+str(wr0)+" "+str(lamb0)+" "+str(wc)+" "+str(wx)+" "+str(wv);
 	header += " "+str(gamma)+ " "+str(kappa)+ " "+str(tf)+ " "+str(dt);
-	np.savetxt(f, absOUT,fmt='%15.10f %15.10f %15.10f %15.10f', delimiter=' ', header=header,comments='#')
+	np.savetxt(f, absOUT,fmt='%15.10f %15.10f %15.10f %15.10f %15.10f', delimiter=' ', header=header,comments='#')
 	f.close();
 	f=open(fnametd,'at')
 	print('    ',file=f)
@@ -353,14 +370,17 @@ def Green(wlist,l0,wr):
 # -------------------------------------------
 def fcorrft(il):
 	# calculate correlation
-	memtime('corr');
-	if usenumpy:
-		corr = gettdRK4(il); # numpy
-		memtime('end-numpy');
+	#memtime('corr');
+	#if usenumpy:
+	#	corr = gettdRK4(il); # numpy
+	#	memtime('end-numpy');
+	#else:
+	corr = gettdfort(il);# fortran
+	#memtime('end-fort');
+	if temp:
+		E1, E2 = e1+wx+Nvs[il]*wv, e2+wx+Nvs[il]*wv;	
 	else:
-		corr = gettdfort(il);# fortran
-		memtime('end-fort');
-	E1, E2 = e1+wx, e2+wx;	
+		E1, E2 = e1+wx, e2+wx;	
 	#print('using: e1,e2 = ',e1,e2)
 	wlist = np.linspace(E1, E2,nwmax);
 	Gw = getFourierTransform(corr,0,dt,wlist,'F');
@@ -420,11 +440,23 @@ def createpsi0(lam0):
 	else: # for undisplaced basis
 		psi0 = np.zeros(ntot);
 		psi0[0] = 1;
+		# not sure if all these ifs are needed.... 
 	#psi0 = psi0.tocsr();
 	# store this to global array for reuse if wr loop
 	if loopover=='wr':
 		o.psi0 = psi0;
 	return psi0
+
+def createpsi0temp(il):
+	# cheat: use the same lambda0 for every il but diff init state in Ground's vib band.
+	psi0 = np.zeros(ntot);
+	# if n==1: Nvs=[0,1,2,3,   4,5];# 4,5 not used in postprocessing..
+	# if n>1: Nvs=[0,1,2,3,m+1,m+2]
+	psi0[basinds[il]] = 1;
+	return psi0		
+
+		
+
 
 # -----------------------------------------------------
 # absoprtion option 1: time evolution

@@ -46,6 +46,12 @@ nlmax = 1;
 wclist = [];
 wvlist = [];
 
+temp = 0;
+if hasattr(param, 'temp'):
+	temp = param.temp
+	#print(' Finite Temperature for absorption... ')
+	
+
 if hasattr(param, 'wclist'):
 	if hasattr(param, 'nlist'):
 		if len(param.wclist)==len(param.nlist):
@@ -56,6 +62,7 @@ if hasattr(param, 'wvlist'):
 		if len(param.wvlist)==len(param.nlist):
 			wvlist = param.wvlist
 			print(' vs wv: wvlist will be used... ')
+
 
 	
 if hasattr(param, 'absorption'):
@@ -150,6 +157,12 @@ if hasattr(param, 'usenumpy'):
 		exit()
 o.usenumpy = usenumpy;
 
+zeroTPL = 0;
+if hasattr(param, 'zeroTPL'):
+	zeroTPL = param.zeroTPL
+	if zeroTPL != 1 and zeroTPL !=0:
+		print(' Absorption or PL? zeroTPL !=0,1; set it properly...' )
+o.zeroTPL = zeroTPL
 
 #------------------------------------- 
 if hasattr(param, 'onlyenergy'):
@@ -338,6 +351,16 @@ o.ld=ld
 o.nstates = nstates
 o.diffoutdir = diffoutdir
 
+# cheating: apply loopover lambda0 to Ground vib band instead
+#n=min(nlist);m=min(mlist)[0]
+#if n>1 and m>2 and temp ==1 and loopover=='lambda0':
+if temp ==1 and loopover=='lambda0':
+	o.temp= temp;
+	lmin,lmax, nlmax = lmin,lmin,6; # 6 initial states needed...
+	lambin0 = np.linspace(lmin,lmax, nlmax);
+	print(' temp=1 so cheating.... lmin will be used...')
+	print(' Finite Temperature for absorption... for 6 states with Nv <= 3 as the starting states for time evolution')
+	
 o.lmin, o.lmax,  o.nlmax = lmin,lmax, nlmax
 o.loopover =loopover; 
 o.lambda0=lambda0

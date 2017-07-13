@@ -30,7 +30,7 @@ def fdiagl(lamb):
 	enlb=elb(lamb0) # lower bound on E_LP
 	ham = o.ham1 + lamb0*wv*o.Hbsm - enlb*o.iden + wv*lamb0**2*o.sft;
 	if 1:
-		evalu, evec = lobpcg(A=ham, X=o.ev0, tol=tolr, maxiter=itermax,largest=False,verbosityLevel=1);	
+		evalu, evec = lobpcg(A=ham, X=o.ev0, tol=tolr, maxiter=itermax,largest=False,verbosityLevel=0);	
 	#evalu,evec = scipy.sparse.linalg.eigsh(ham, k=nstates, which='SA',return_eigenvectors=True)
 		# x = evec*evec;
 		# print("norms:",np.sum(x,0))
@@ -50,8 +50,10 @@ def fdiagl(lamb):
 			print(" eigenvalues, vectors not converged!")
 
 	elp = evalu+enlb + eshft;
+
 	if nstates <= 10:
-		print("il, lam0, Elp = ",il,lamb0, elp);
+		print('il: evalu, enlb, eshft,elp=',il,evalu, enlb, eshft,elp)
+		#print("il, lam0, Elp = ",il,lamb0, elp);
 		sys.stdout.flush()
 	if (justenergy):
 		return il, elp

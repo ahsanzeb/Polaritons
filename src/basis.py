@@ -141,7 +141,7 @@ def fbasis(n,m,mx,Np):
 	n1 = n1fsym + (mx-m)*n2; # extended basis size, photon sector
 	# total number of basis states
 	ntot = n1 + (mx+1)*n2;	
-	o.n1fsym,o.n1,o.n2,o.n3,o.ntot = n1fsym,n1,n2,n3,ntot; 
+	o.n1fsym,o.n1,o.n2,o.n3,o.ntot = n1fsym,n1,n2,n3,ntot; 	
 	# -------------------------------------------------------
 	# get chunk lists for multiprocessing pool map
 	# sets global variables: listn2 [,listn3]

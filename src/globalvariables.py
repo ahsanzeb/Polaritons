@@ -8,6 +8,9 @@ inpfile = 0;
 show = 0; corrtd= 0; matelem = 0;
 groundstate = 0; justenergy = 0;
 
+zeroTPL = 0;
+temp = 0;
+
 diffoutdir = 0;
 usenumpy = 0;
 gamma=0; kappa=0;
@@ -73,6 +76,7 @@ colsmap = [];
 #----------------------------------
 # set/calculated in hamiltonian:
 Hcsm=[]; Hxsm=[]; Hvsm=[]; Hbsm=[]; Hgsm=[]; sft=[]; iden=[];
+Hv0 = []; Hg=[];
 #----------------------------------
 
 #----------------------------------

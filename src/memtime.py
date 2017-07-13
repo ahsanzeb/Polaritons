@@ -27,13 +27,13 @@ def memtime(thismod):
 	print(x)
 	sys.stdout.flush()
 
-	f=open('time-and-mem.txt','at')
-	x = str(o.n)+' '+str(o.m)+' '+str(o.mx)+' ';
-	x+= str(np.around(memnw*1e-6,3))+' '+str(np.around(timnw,3))+' ';
-	x+= str(mem)+' '+str(tim);
-	print(x,file=f)
-	f.close()
-
+	if 0:
+		f=open('time-and-mem.txt','at')
+		x = str(o.n)+' '+str(o.m)+' '+str(o.mx)+' ';
+		x+= str(np.around(memnw*1e-6,3))+' '+str(np.around(timnw,3))+' ';
+		x+= str(mem)+' '+str(tim);
+		print(x,file=f)
+		f.close()
 
 	# reset the global var for later use:
 	o.time0 = timnw; 	o.mem0 = memnw;

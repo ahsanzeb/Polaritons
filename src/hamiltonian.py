@@ -20,7 +20,7 @@ n1fsym,n1,n2,n3,ntot = o.n1fsym,o.n1,o.n2,o.n3,o.ntot;
 listn1fsym, listn2, listn3 = o.listn1fsym, o.listn2, o.listn3
 detuning = o.detuning;
 corrtd = o.corrtd;
-
+zeroTPL = o.zeroTPL;
 #print('hamiltonian: ld = ',ld)
 
 # print('mod ham: n1,n2,ntot, mx = ',n1,n2,ntot, mx )
@@ -207,17 +207,7 @@ def getHg(jchunk):
 	return Hgloc
 #****************************************************************
 # in photon 1c block
-# for i in range(0,n1fsym):
-def fHv1c(ichunk):
-	Hvloc = np.zeros((3,ichunk[1]-ichunk[0]))
-	ind=0;
-	for i in range(ichunk[0],ichunk[1]):
-		Nvi = o.Nv1l[i];
-		Hvloc[:,ind] = i,i,Nvi
-		ind += 1;
-	return Hvloc
-
-def fHv1cnew():
+def fHv1c():
 	Hv1c = np.zeros((3,n1fsym));
 	Hv1c[0,:] = range(n1fsym)
 	Hv1c[1,:] = range(n1fsym)
@@ -341,17 +331,29 @@ def hamilt():
 	del Hb; gc.collect()
 	#memtime('Hb');
 	print("        Hb calculated...")
+	print('listn2:',listn2)
 
-	Hg=pool.map(getHg,listn2);
-	Hg = np.hstack(Hg);
-	o.Hgsm = coomatnp(Hg,1); del Hg; gc.collect()
+	if len(listn2)> 1:
+		Hg=pool.map(getHg,listn2);
+		Hg = np.hstack(Hg);
+	else:
+		Hg = getHg(listn2[0])
+	o.Hgsm = coomatnp(Hg,1); 
+	#del Hg; gc.collect()
+	# save Hg
+	if o.zeroTPL:
+		o.Hg = Hg;
 	#memtime('Hg');
 	print("        Hg calculated...")
 
 	# in photon 1c block
 	#Hv1c= pool.map(fHv1c,listn1fsym); # range(0,n1fsym)
-	Hv1c= [fHv1cnew()];
-	Hv1cExtra= pool.map(fHv1cExtra,listn2)
+	Hv1c= [fHv1c()];
+	Hv1cExtra= pool.map(fHv1cExtra,listn2);
+	if zeroTPL:
+		x=np.hstack(Hv1c+Hv1cExtra);
+		o.Hv0=x[2,:];
+		del x;
 	# in exciton 0c block
 	Hv0c=pool.map(fHv0c,listn2);
 	Hv = Hv1c + Hv1cExtra + Hv0c;
@@ -392,7 +394,9 @@ def hamiltn1(mx):
 	Hg = [];
 	for i in range(mx+1):
 		Hg.append([i,n1+i,1]);
-	o.Hgsm = coomat(Hg,1); del Hg;
+	o.Hgsm = coomat(Hg,1);
+	if o.zeroTPL:
+		o.Hg = np.array(Hg).T;
 	Hb = [];
 	for i in range(1,mx+1):
 		Hb.append([i-1,i,sqrt(i)]);

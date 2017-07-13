@@ -6,17 +6,17 @@
 
 !input: double/int: H(:,:), psi0(:), dt, ntmax, kappa, gamma, n1, ntot
 !output: double complex: correlation(:)
-      subroutine tcorr(n1,ntot,nnz,nrp,prntstep,Val,Col,RowPtr,
+      subroutine tcorr(zeroTPL,n1,ntot,nnz,nrp,prntstep,Val,Col,RowPtr,
      .        psi0,dt,ntmax,kappa2,gamma2,corr)
       implicit none
-      integer :: n1,ntot,nnz,nrp,ntmax, prntstep
+      integer :: zeroTPL, n1,ntot,nnz,nrp,ntmax, prntstep
       double precision :: dt, kappa2, gamma2
       double precision, dimension(nnz):: Val
       integer, dimension(nnz):: Col
       integer, dimension(nrp):: RowPtr
       double complex, dimension(ntot):: psi0
       double complex, dimension(ntmax):: corr
-Cf2py intent(in) n1,ntot,nnz,nrp,ntmax, prntstep, dt, kappa2, gamma2
+Cf2py intent(in) n1,ntot,nnz,nrp,ntmax, prntstep, dt, kappa2, gamma2,zeroTPL
 Cf2py intent(in) Val, Col, RowPtr,psi0
 Cf2py depend(nnz) Val, Col
 Cf2py depend(nrp) RowPtr
@@ -27,18 +27,21 @@ Cf2py depend(ntmax) corr
       ! aux
       double complex, dimension(ntot) :: psit,k1,k2,k3,v
       integer :: i
-      logical :: dkappa
+      logical :: dkappa,ZTPL
       double precision :: dth,dt6
       double complex :: iotam
       dth = dt/2.0d0;
       dt6 = dt/6.0d0;
       iotam = (0.0d0,-1.0d0);
       write(6,*)'nnz, ntot = ',nnz,ntot
-      dkappa = .false.
+      dkappa = .false.; 
       if (abs(kappa2-gamma2) > 1e-6) dkappa = .true.
 
+      ZTPL = .false.
+      if (zeroTPL ==1) ZTPL = .true.
+
       psit(:) = psi0(:);
-      corr(1) = (1.0d0,0.0d0) !complex(1.0d0,0.0d0);
+      corr(1) = DOT_PRODUCT(psi0, psit);
 
       do i=2,ntmax
        if (mod(i,prntstep) == 0)
@@ -61,13 +64,19 @@ Cf2py depend(ntmax) corr
         vout(i) = vout(i) + Val(j)*vin(Col(j));
        end do
       end do
-      if (dkappa) then     	
-       v(1:n1) = kappa2*vin(1:n1);
-       v(n1+1:ntot) = gamma2*vin(n1+1:ntot);
-       !write(6,*)"size(k1) = ",size(k1)
+      if (ZTPL) then
+       v(1:n1) = vin(1:n1);
+       v(n1+1:2*n1) = kappa2*vin(n1+1:2*n1);
+       v(2*n1+1:ntot) = gamma2*vin(2*n1+1:ntot)
        vout = vout*iotam - v
       else
-       vout = vout*iotam - kappa2*vin
+       if (dkappa) then
+        v(1:n1) = kappa2*vin(1:n1);
+        v(n1+1:ntot) = gamma2*vin(n1+1:ntot);
+        vout = vout*iotam - v
+       else
+        vout = vout*iotam - kappa2*vin
+       endif
       endif
       end subroutine yprime
       !----------------------------------------

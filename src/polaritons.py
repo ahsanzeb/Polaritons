@@ -29,8 +29,12 @@ nlist = o.nlist;
 mlist = o.mlist;
 n, m, mx, Np0 = o.n, o.m, o.mx,o.Np;
 corrtd, matelem = o.corrtd, o.matelem;
+zeroTPL = o.zeroTPL;
 groundstate, justenergy = o.groundstate, o.justenergy
 diffoutdir = o.diffoutdir;
+if zeroTPL:
+	print(" PL: undisplaced basis will be used... ")
+	o.ld = 0;
 old = o.ld; # to reset ld value for n!=1
 lamlist = o.lamlist;
 uselamlist = o.uselamlist;
@@ -44,6 +48,8 @@ for nn in nlist:
 	m, mx = mlist[niter];
 	o.m, o.mx = m, mx;
 
+	print('lambin0 = ', o.lambin0)
+	
 	if uselamlist:
 		o.lambin0 = [lamlist[niter]]; # to cheat
 		print(' lam = ',o.lambin0)
@@ -73,7 +79,7 @@ for nn in nlist:
 	# sets global: Nv1l,Nv2l,Norm1l,Norm2l,Norm3l,map21,map32
 	# also sets: n1fsym,n1,n2[,n3],ntot, listn2 [,listn3]
 	basis.fbasis(n,m,mx,Np);
-	memtime('basis');# print memory and time info
+	memtime('basis');# print memory and time infox
 	# -------------------------------------------------------
 	# calculate Hamiltonian:
 	# set global variables: Hcsm, Hxsm, Hvsm, Hbsm, Hgsm, sft
@@ -84,18 +90,24 @@ for nn in nlist:
 	memtime('hamiltonian');# print memory and time info	
 	# -------------------------------------------------------
 	if corrtd:
-		# absorption: using time evolution:
-		# calculates and saves: corr,ft, analyt. G
-		if niter==0: import correlation; 
-		else: reload(correlation)
-		correlation.corrft();
+		if zeroTPL:
+			if niter==0: import plmatelem; 
+			else: reload(plmatelem)
+			plmatelem.plmatelem();
+		else:
+			# absorption: using time evolution:
+			# calculates and saves: corr,ft, analyt. G
+			if niter==0: import correlation; 
+			else: reload(correlation)
+			correlation.corrft();
 		memtime('corrft');# print memory and time info
 	# -------------------------------------------------------	
 	if matelem:
 		# absorption: matrix elements:
 		if o.nstates < 0 or o.nstates > o.ntot:
 			o.nstates = o.ntot;
-			print(" input nstates < 0 or > ntot! so setting nstates = ntot")
+			o.nstates = o.n1	;
+			print(" input nstates < 0 or > ntot! so setting nstates = ntot: nstates = ",o.nstates)
 		if niter==0: import matrixelements;
 		else: reload(matrixelements)
 		matrixelements.fmatelem();

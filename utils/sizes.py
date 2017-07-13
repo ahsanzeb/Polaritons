@@ -3,14 +3,15 @@
 from scipy.special import binom
 import numpy as np
 
-maxsize = 10e6;
-m,mx = 3,3;
+maxsize = 1e8;
+m,mx = 6,6;
 for n in np.linspace(5,100,20):
 	n1 = binom(m+n, m);
 	n2 = binom(m+n-1, m);
 	ntot = n1 + (mx+1)*n2;	
-	x=int(n), int(ntot)
-	print(x);
+	if ntot <= maxsize:
+		x=int(n), int(ntot)
+		print(x);
 
 exit()
 

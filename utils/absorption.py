@@ -16,11 +16,11 @@ kappa = 0.5*(kr+kl);
 
 
 dw = 0.001; # frequency bin width:
-wi = -2.5;
-wf = 2.5;# set to -ve to include all eigenvectors
+wi = -1.2;
+wf = 1.2;# set to -ve to include all eigenvectors
 
 # waterfall plot
-ei=-1.5; ef= 1.5; # energy window
+ei=-1.2; ef= 1.2; # energy window
 lcol = 'b'; fcol = 'b'; # line and filling colours
 
 fig ='false';
