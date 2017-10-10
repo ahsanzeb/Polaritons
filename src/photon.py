@@ -23,7 +23,7 @@ np.set_printoptions(suppress=True)
 
 
 def photfrac():
-	print(' ====> calculating photon fractions... ')
+	print(' ====> calculating photon/exciton fractions... ')
 	# -----------------------------
 	if loopover == 'lambda0':
 	# parameters:
@@ -50,7 +50,7 @@ def photfrac():
 #-------------------------------------
 def writephot(dm,param,lambin0,fout):
 	f=open(fout,'ab')
-	np.savetxt(f,param[None],  fmt='%5i, %5i, %10.6f, %10.6f')
+	np.savetxt(f,param[None],  fmt='%5i %5i %10.6f %10.6f')
 	for il in range(nlmax):
 		x = dm[il];
 		l0 = lambin0[il];
