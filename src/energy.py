@@ -9,6 +9,7 @@ loopover= o.loopover;
 dumy = o.dumy;
 lambin = o.lambin;
 justenergy = o.justenergy;
+photonfraction = o.photonfraction;
 nlmax = o.nlmax;
 
 # add as comments in output file
@@ -29,7 +30,7 @@ else:
 
 # energy = [[0.0]*2 for il in range(nlmax)];
 energy=[];
-if justenergy:
+if justenergy and not photonfraction:
 	for il, evalu in o.eigvv:
 		# energy[il][0] = lambin[il][1]
 		# energy[il][1] = evalu

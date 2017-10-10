@@ -31,6 +31,8 @@ n, m, mx, Np0 = o.n, o.m, o.mx,o.Np;
 corrtd, matelem = o.corrtd, o.matelem;
 zeroTPL = o.zeroTPL;
 groundstate, justenergy = o.groundstate, o.justenergy
+photonfraction = o.photonfraction;
+
 diffoutdir = o.diffoutdir;
 if zeroTPL:
 	print(" PL: undisplaced basis will be used... ")
@@ -122,6 +124,10 @@ for nn in nlist:
 		# write energy output file
 		if niter==0: import energy;
 		else: reload(energy)
+		if photonfraction:
+			if niter==0: import photon
+			else: reload(photon)
+			photon.photfrac()
 		if not justenergy:
 			if niter==0: import densitymatrices
 			else: reload(densitymatrices)

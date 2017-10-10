@@ -14,6 +14,7 @@ n1fsym = o.n1fsym;
 nlmax = o.nlmax;
 loopover= o.loopover;
 lambin0 = o.lambin0;
+lambda0 = o.lambda0;
 
 listn2 = o.listn2;
 listn3 = o.listn3;

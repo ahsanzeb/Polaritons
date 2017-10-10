@@ -300,14 +300,24 @@ def fwriteFT(il,wlist, Gw, GR, fnametd, ntmax):
 
 def fwriteFT2(il,wlist, Gw, GR, GR2, fnametd, ntmax):
 	# save FT of correlation
-	absOUT = np.zeros((nwmax,6));
+	absOUT = np.zeros((nwmax,8));
 	absOUT[:,0] = wlist;
 	absOUT[:,1] = np.real(Gw);
-	# 2*kl*np.imag(absws) + kappa*np.abs(absws)**2;
-	absOUT[:,4] = 2*kl*np.real(Gw) + kappa*np.abs(Gw)**2;
 	absOUT[:,2] = -np.imag(GR2);# truncated then transformed
 	absOUT[:,3] = -np.imag(GR); # Green from analytical (transformed then trucated)
-	absOUT[:,5] = -2*kl*np.imag(GR) + kappa*np.abs(GR)**2;
+	# Absorption = -2*kin*np.imag(D^R) + (kin+kout)*np.abs(D^R)**2;
+	absOUT[:,4] = 2*kl*np.real(Gw) - kl*kappa*np.abs(Gw)**2;
+	absOUT[:,5] = -2*kl*np.imag(GR) - kl*kappa*np.abs(GR)**2;
+	absOUT[:,6] = np.imag(Gw);
+	absOUT[:,7] = np.real(GR2);
+	#A1 = np.real(Gw);
+	#A4 = 2*kl*np.real(Gw) + kappa*np.abs(Gw)**2;
+#	absOUT[:,8] = kappa*A1 + 0.5*kappa*(A4 - kappa*A1);
+	
+	# G = x +i y; D = iG = -y + i x
+	# -ImG = ReD, ReG=ImD	
+
+
 	
 	f=open(fnametd,'ab');
 	if loopover =="lambda0":
@@ -319,7 +329,7 @@ def fwriteFT2(il,wlist, Gw, GR, GR2, fnametd, ntmax):
 	header =" "+str(n)+" "+str(m)+" "+str(mx)+" "+str(nwmax)+" "+str(ntmax);
 	header += " "+str(wr0)+" "+str(lamb0)+" "+str(wc)+" "+str(wx)+" "+str(wv);
 	header += " "+str(gamma)+ " "+str(kappa)+ " "+str(tf)+ " "+str(dt);
-	np.savetxt(f, absOUT,fmt='%15.10f %15.10f %15.10f %15.10f %15.10f %15.10f', delimiter=' ', header=header,comments='#')
+	np.savetxt(f, absOUT,fmt='%15.10f %15.10f %15.10f %15.10f %15.10f %15.10f %15.10f %15.10f', delimiter=' ', header=header,comments='#')
 	f.close();
 	f=open(fnametd,'at')
 	print('    ',file=f)

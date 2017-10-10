@@ -164,6 +164,10 @@ if hasattr(param, 'zeroTPL'):
 		print(' Absorption or PL? zeroTPL !=0,1; set it properly...' )
 o.zeroTPL = zeroTPL
 
+
+if hasattr(param, 'photonfraction'):
+	photonfraction = param.photonfraction
+
 #------------------------------------- 
 if hasattr(param, 'onlyenergy'):
 	onlyenergy = param.onlyenergy
@@ -384,6 +388,7 @@ if matelem or groundstate:
 
 if groundstate:
 	o.groundstate = groundstate;
+	o.photonfraction = photonfraction;
 	if justenergy:
 		o.justenergy = justenergy;
 #****************************************************************

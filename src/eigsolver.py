@@ -10,6 +10,7 @@ wr,wx,wc,wv = o.wr, o.wx, o.wc, o.wv
 eshft, nstates = o.eshft, o.nstates
 tolr, itermax = o.tolr, o.itermax 
 justenergy = o.justenergy
+photonfraction = o.photonfraction;
 lambda0= o.lambda0;
 
 # LOWER BOUND ON ENERGY: lambda
@@ -55,7 +56,7 @@ def fdiagl(lamb):
 		print('il: evalu, enlb, eshft,elp=',il,evalu, enlb, eshft,elp)
 		#print("il, lam0, Elp = ",il,lamb0, elp);
 		sys.stdout.flush()
-	if (justenergy):
+	if (justenergy and not photonfraction):
 		return il, elp
 	else:
 		return il, elp, evec
@@ -75,7 +76,7 @@ def fdiagw(lamb):
 	if nstates <= 5:
 		print("il, wr, Elp = ",il,wr, elp)
 		sys.stdout.flush()	
-	if justenergy:
+	if (justenergy and not photonfraction):
 		return il, elp
 	else:
 		return il, elp, evec
