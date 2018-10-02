@@ -399,7 +399,7 @@ def hamiltn1(mx):
 		o.Hg = np.array(Hg).T;
 	Hb = [];
 	for i in range(1,mx+1):
-		Hb.append([i-1,i,sqrt(i)]);
+		Hb.append([n1+i-1,n1+i,sqrt(i)]);
 	o.Hbsm = coomat(Hb,1);  del Hb;
 	Hv = [];
 	for i in range(0,mx+1):

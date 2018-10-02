@@ -334,8 +334,8 @@ def cdmsn1():
 #-------------------------------------
 def writedms(dm,param,lambin0,fout):
 	f=open(fout,'ab')
-	np.savetxt(f,param[None],  fmt='%5i, %5i, %10.6f, %10.6f')
-	np.savetxt(f,lambin0[None],  fmt='%10.6f',delimiter=',')
+	#np.savetxt(f,param[None],  fmt='%5i, %5i, %10.6f, %10.6f')
+	#np.savetxt(f,lambin0[None],  fmt='%10.6f',delimiter=',')
 	for x in dm:
 		y=symmetrize(x)
 		np.savetxt(f,y, fmt='%15.10f', delimiter=',')

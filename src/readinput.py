@@ -43,7 +43,12 @@ lmin = 0;
 lmax = 0;
 nlmax = 1;
 # loopover = 'lambda0';
-wclist = [];
+wclist = [];  # wclist, wvlist etc have an issue... works only for a single value of n
+# (readinout: len(nlist)==len(wclist), works otherwise default wc=2 is used!!! )
+# (this means we cant use wclist for a nlist with multiple n values... 
+#Solution: change the style of loopover... include all loops there... 
+#over wc, wv,  etc... and use a single function for diagonalisation
+# instead of currect style two seperate for lambda and wr.)
 wvlist = [];
 
 temp = 0;
@@ -173,7 +178,7 @@ if hasattr(param, 'onlyenergy'):
 	onlyenergy = param.onlyenergy
 	if (onlyenergy=='true' and absorption=='true'):
 		onlyenergy = None;
-	elif(absorption !='true'):
+	elif(onlyenergy=='true' and absorption !='true'):
 		print("       onlyenergy = TRUE ")
 	else:
 		onlyenergy = None
@@ -191,6 +196,10 @@ elif absorption=='true':
 	diffoutdir =0;
 	print(" For absorption, default diffoutdir=0 will be used...");
 
+
+print(" ")
+print("Warning: For DM calculations, mx=m only implemented! ");
+print(" ")
 
 #-------------------------------------
 # set some default parameters:
