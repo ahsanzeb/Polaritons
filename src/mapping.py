@@ -52,6 +52,7 @@ def triangles(colist,iin,k,m):
 					Map[yi+mj,i0+j] = int(k);
 					if j ==0 and mjj==m: km = k;
 					k += 1;
+			#print('m, i0 = ',m,i0)
 			Map[yf:,i0] = range(km+1,k)
 			yi = yf;
 			i += 1;

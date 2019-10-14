@@ -264,7 +264,7 @@ def fwriteCorr(il,tlist, corr, fnametd):
 	header =" "+str(n)+" "+str(m)+" "+str(mx)+" "+str(nwmax)+" "+str(ntmax);
 	header += " "+str(wr)+" "+str(lamb0)+" "+str(wc)+" "+str(wx)+" "+str(wv);
 	header += " "+str(gamma)+ " "+str(kappa)+ " "+str(tf)+ " "+str(dt);
-	np.savetxt(f, corrOUT,fmt='%15.10f %15.10f %15.10f', delimiter=' ', header=header,comments='#')
+	np.savetxt(f, corrOUT,fmt='%25.10f %25.10f %25.10f', delimiter=' ', header=header,comments='#')
 	f.close();
 	f=open(fnametd,'at')
 	print('    ',file=f)
@@ -297,7 +297,7 @@ def fwriteFT(il,wlist, Gw, GR, fnametd, ntmax):
 	print('    ',file=f)
 	f.close()		
 	return None
-
+#--------------------------
 def fwriteFT2(il,wlist, Gw, GR, GR2, fnametd, ntmax):
 	# save FT of correlation
 	absOUT = np.zeros((nwmax,8));
@@ -329,7 +329,7 @@ def fwriteFT2(il,wlist, Gw, GR, GR2, fnametd, ntmax):
 	header =" "+str(n)+" "+str(m)+" "+str(mx)+" "+str(nwmax)+" "+str(ntmax);
 	header += " "+str(wr0)+" "+str(lamb0)+" "+str(wc)+" "+str(wx)+" "+str(wv);
 	header += " "+str(gamma)+ " "+str(kappa)+ " "+str(tf)+ " "+str(dt);
-	np.savetxt(f, absOUT,fmt='%15.10f %15.10f %15.10f %15.10f %15.10f %15.10f %15.10f %15.10f', delimiter=' ', header=header,comments='#')
+	np.savetxt(f, absOUT,fmt='%15.10f %25.20f %15.10f %15.10f %15.10f %15.10f %15.10f %15.10f', delimiter=' ', header=header,comments='#')
 	f.close();
 	f=open(fnametd,'at')
 	print('    ',file=f)

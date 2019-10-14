@@ -57,7 +57,8 @@ def fdiagl(lamb):
 		#print("il, lam0, Elp = ",il,lamb0, elp);
 		sys.stdout.flush()
 	if (justenergy and not photonfraction):
-		return il, elp
+		#return il, elp
+		return il, evalu
 	else:
 		return il, elp, evec
 #	gc.collect()
@@ -81,3 +82,6 @@ def fdiagw(lamb):
 	else:
 		return il, elp, evec
 #****************************************************************
+
+#def getdarkstates(elp, evec):
+	

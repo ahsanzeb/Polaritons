@@ -339,6 +339,8 @@ def writedms(dm,param,lambin0,fout):
 	for x in dm:
 		y=symmetrize(x)
 		np.savetxt(f,y, fmt='%15.10f', delimiter=',')
+		#print("diag(rho) = ", np.diag(x))
+		#print("trace(x) = ",np.trace(x))
 	f.close()
 	return
 #-------------------------------------

@@ -7,7 +7,7 @@ inpfile = 0;
 #----------------------------------
 show = 0; corrtd= 0; matelem = 0;
 groundstate = 0; justenergy = 0;
-
+photonfraction=0;
 zeroTPL = 0;
 temp = 0;
 

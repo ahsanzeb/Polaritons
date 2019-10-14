@@ -217,7 +217,7 @@ for result in results:
 	result[:,3] = result[:,3]/maxval[2];
 	header = headers[i];
 	f=open(fname,'ab');
-	np.savetxt(f, result,fmt='%15.10f%15.10f%15.10f%15.10f', delimiter=' ',header=header,comments=' ')
+	np.savetxt(f, result,fmt='%15.10f%25.15f%15.10f%15.10f', delimiter=' ',header=header,comments=' ')
 	f.close();
 	f=open(fname,'at')
 	print('    ',file=f)

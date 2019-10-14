@@ -136,6 +136,10 @@ def fbasis(n,m,mx,Np):
 	o.Fact1l = Factlist;
 	o.Nv1l = Nvlist;
 	o.Norm1l, o.Norm2l, o.Norm3l = Norm1,Norm2,Norm3
+	#	print('Norm1=',Norm1)
+	#	print('Norm2=',Norm2)
+	#	print('Norm3=',Norm3)
+	
 	#--------------------------
 	n1fsym = int(scipy.special.binom(m+n, n)); # old thing with name n1
 	n1 = n1fsym + (mx-m)*n2; # extended basis size, photon sector
@@ -186,6 +190,7 @@ def mkfsgnnf(indlist):
 					res2.append(x)
 			resx=res2
 			res2=[];
+		# print('resx = ',resx)
 		# get no of phonons list, Normalisation list, etc.
 		if o.corrtd and o.ld>0:
 			# Fctl,Nvl,Nrm1,Nrm2,Nrm3 = getNvNormFacl(resx,n,m);

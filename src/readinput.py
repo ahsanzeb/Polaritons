@@ -33,6 +33,7 @@ print(' ====> reading input file ... ')
 show = 0; corrtd= 0; matelem = 0;
 groundstate = 0;
 justenergy = 0;
+photonfraction=0;
 nstates=1;
 absorption='false';
 td = 'false';

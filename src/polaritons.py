@@ -56,6 +56,9 @@ for nn in nlist:
 		o.lambin0 = [lamlist[niter]]; # to cheat
 		print(' lam = ',o.lambin0)
 
+	#o.lambin0 = [0.01,0.02,0.03,0.04];
+	#print('lambin0 new = ', o.lambin0)
+
 	if len(wclist)==len(nlist):
 		o.wc = wclist[niter]; print(' wc = ',o.wc)
 	if len(wvlist)==len(nlist):
