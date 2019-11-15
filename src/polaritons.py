@@ -69,7 +69,7 @@ for nn in nlist:
 	prntmsg(n,m,mx,niter,lnlist); 
 	# create output directory
 	o.dumy = createoutdir(n,diffoutdir);
-	if n==1: #or m==0:
+	if n==1 or o.nlarge: #or m==0:
 		o.ld = 0; # undisplaced basis are used
 	else:
 		o.ld = old;
@@ -77,13 +77,18 @@ for nn in nlist:
 	#o.ld = 0.1*niter;
 	print('o.ld = ',o.ld)
 
+	print('main: o.nlarge =', o.nlarge)
 	# set Np <= n3
 	Np = setNp(n,m,Np0); o.Np=Np;
 	# -------------------------
 	# calc symmetrised phonon basis related quantities
 	# sets global: Nv1l,Nv2l,Norm1l,Norm2l,Norm3l,map21,map32
 	# also sets: n1fsym,n1,n2[,n3],ntot, listn2 [,listn3]
-	basis.fbasis(n,m,mx,Np);
+	if(o.nlarge):
+		basis.fbasisNormsRatio(o.ndummy,m,mx,Np);
+	else:
+		basis.fbasis(n,m,mx,Np);
+
 	memtime('basis');# print memory and time infox
 	# -------------------------------------------------------
 	# calculate Hamiltonian:
@@ -91,7 +96,7 @@ for nn in nlist:
 	if niter==0: import hamiltonian; 
 	else: reload(hamiltonian)
 	# import here to use the right values for global variables
-	hamiltonian.hamilt();
+	hamiltonian.hamilt(o.nlarge);
 	memtime('hamiltonian');# print memory and time info	
 	# -------------------------------------------------------
 	if corrtd:

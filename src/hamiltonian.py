@@ -206,6 +206,20 @@ def getHg(jchunk):
 			ind += 1;
 	return Hgloc
 #****************************************************************
+def getHgMapRatio(jchunk):
+	Hgloc = np.zeros((3, (mx+1)*(jchunk[1]-jchunk[0])));
+	ind = 0;
+	for jj in range(jchunk[0],jchunk[1]):
+		#m2 = o.Norm2l[jj];
+		for mj in range(0,m+1):
+			j= n1 + mj*n2 + jj # coor in uper right block
+			ii = o.map21[jj,mj]
+			#m1 = o.Norm1l[ii];
+			hgij= o.MapNorms[jj,mj];  #sqrt(n*m2/m1)
+			Hgloc[:,ind] = ii,j,hgij
+			ind += 1;
+	return Hgloc
+#****************************************************************
 # in photon 1c block
 def fHv1c():
 	Hv1c = np.zeros((3,n1fsym));
@@ -270,7 +284,7 @@ def fsftm():
 #****************************************************************
 #  Hamiltonain: parallel
 #****************************************************************
-def hamilt():
+def hamilt(nlarge):
 
 	#print('listn2 = ',listn2)
 	#print('listn3 = ',listn3)	#****************************************************************
@@ -334,10 +348,16 @@ def hamilt():
 	print('listn2:',listn2)
 
 	if len(listn2)> 1:
-		Hg=pool.map(getHg,listn2);
+		if(nlarge):
+			Hg=pool.map(getHgMapRatio,listn2);
+		else:
+			Hg=pool.map(getHg,listn2);		
 		Hg = np.hstack(Hg);
 	else:
-		Hg = getHg(listn2[0])
+		if(nlarge):
+			Hg = getHgMapRatio(listn2[0])
+		else:
+			Hg = getHg(listn2[0])		
 	o.Hgsm = coomatnp(Hg,1); 
 	#del Hg; gc.collect()
 	# save Hg
@@ -349,7 +369,10 @@ def hamilt():
 	# in photon 1c block
 	#Hv1c= pool.map(fHv1c,listn1fsym); # range(0,n1fsym)
 	Hv1c= [fHv1c()];
-	Hv1cExtra= pool.map(fHv1cExtra,listn2);
+	if(o.mx > o.m):
+		Hv1cExtra= pool.map(fHv1cExtra,listn2);
+	else:
+		Hv1cExtra=[];
 	if zeroTPL:
 		x=np.hstack(Hv1c+Hv1cExtra);
 		o.Hv0=x[2,:];

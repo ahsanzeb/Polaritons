@@ -1,3 +1,5 @@
+import numpy as np
+
 #----------------------------------
 inpfile = 0;
 #----------------------------------
@@ -59,6 +61,10 @@ listn1fsym=[];listn2 = []; listn3 = [];
 
 #----------------------------------
 # set/calculated in basis.fbasis():
+MapNorms=np.zeros((1,1)); 
+nlarge=False;
+ndummy=5;
+
 Nv1l=[];  
 Norm1l=[]; Norm2l=[]; Norm3l=[];
 map21=[]; 

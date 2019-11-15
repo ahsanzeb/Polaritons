@@ -69,8 +69,13 @@ if hasattr(param, 'wvlist'):
 			wvlist = param.wvlist
 			print(' vs wv: wvlist will be used... ')
 
+if hasattr(param, 'nlarge'):
+	o.nlarge=param.nlarge
+	print('readinp: nlarge = ',o.nlarge)
+	if(o.nlarge):
+		print('readinp: Basis with permutations for N='+str(o.ndummy)+' will be used.... !')
 
-	
+			
 if hasattr(param, 'absorption'):
 	absorption = param.absorption
 	if (absorption=='true'):
